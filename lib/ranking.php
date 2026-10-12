@@ -15,7 +15,13 @@
  *   les autres équipes du BSO, puis 5, 4, 3 pour les 2es, 3es, 4es de poule,
  *   0 au-delà. Avec une seule poule, on ne décale pas : le 3e de poule reste
  *   « 3e de poule », 4 points (décision du 12 octobre 2026).
+ * - Poule unique sans BSO (le règlement laisse le choix à l'organisateur,
+ *   décision du 13 octobre 2026) : classement de la poule ; 1er = 1re place,
+ *   10 points ; 2e = 2e place, 9 points ; puis 3e de poule 4 points, 4e 3 points.
  */
+
+/** Points du 1er et du 2e d'une poule unique tirée sans BSO. */
+const TDM_POINTS_NO_BSO = [1 => 10, 2 => 9];
 
 /** Points des quatre premières places du BSO. */
 const TDM_POINTS_BSO_PODIUM = [1 => 10, 2 => 9, 3 => 8, 4 => 7];
@@ -70,13 +76,27 @@ function tdm_points($inBso, $place, $poolRank)
  * @param array<string, int> $poolRanks Clé d'équipe => rang dans sa poule (0 = non classée).
  * @param array<string, int|null> $bsoPlaces Clé d'équipe => place issue du BSO
  *        (1, 2, 3… sans ex aequo), null ou absente tant que le BSO n'a pas classé l'équipe.
+ * @param bool $withBso false : poule unique tirée sans BSO (ignoré avec plusieurs poules).
  * @return array<string, array{place: int|null, points: int, bso: bool}>
  *         Dans l'ordre du classement ; place null = pas encore classée.
  */
-function tdm_final_ranking($pools, array $poolRanks, array $bsoPlaces)
+function tdm_final_ranking($pools, array $poolRanks, array $bsoPlaces, $withBso = true)
 {
     $pools = max(1, (int) $pools);
     $bsoSize = tdm_bso_size($pools);
+
+    // Poule unique sans BSO : la place est le rang de poule.
+    if ($pools === 1 && !$withBso) {
+        $out = [];
+        foreach ($poolRanks as $key => $rank) {
+            $rank = (int) $rank;
+            $out[(string) $key] = $rank >= 1
+                ? ['place' => $rank, 'points' => TDM_POINTS_NO_BSO[$rank] ?? tdm_points(false, null, $rank), 'bso' => false]
+                : ['place' => null, 'points' => 0, 'bso' => false];
+        }
+        uasort($out, fn($a, $b) => ($a['place'] ?? PHP_INT_MAX) <=> ($b['place'] ?? PHP_INT_MAX));
+        return $out;
+    }
 
     $out = [];
     $byPoolRank = []; // rang de poule => clés des équipes hors BSO

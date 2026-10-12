@@ -33,8 +33,13 @@ Quatre étapes, dans l'ordre. Chacune peut être relancée : ce qui est déjà e
    range chaque archer dans le départ de sa catégorie.
 4. **Épreuves d'équipe et poules** : choisir le nombre de poules et leur taille pour chaque catégorie.
    Le module crée les épreuves par équipe en Round Robin et leurs cibles de poules. Seules les catégories
-   cochées sont créées ou mises à jour (modifier une ligne la coche). Si les poules d'une catégorie sont déjà
-   remplies, il faut cocher « Je confirme » : elles seront vidées et leurs matchs effacés.
+   cochées sont créées ou mises à jour (modifier une ligne la coche). Pour une catégorie dont les poules sont déjà
+   remplies, la case « Je confirme » vide les poules et efface les matchs : obligatoire pour changer la configuration,
+   elle sert aussi à repartir de zéro (puis refaire la validation qualif → poules).
+
+> **Archers supprimés puis réimportés après une validation :** les équipes déjà formées pointent vers des archers
+> qui n'existent plus. Une alerte rouge le signale (Configuration, Équipes, Qualifications). Recomposez les équipes,
+> puis cochez la catégorie et « Je confirme » à l'étape 4 : les poules sont vidées et ces équipes supprimées.
 
 ## 2. Composition des équipes
 
@@ -42,10 +47,13 @@ Une équipe = **une femme et un homme du même club**, dans la même catégorie.
 
 - **Glisser-déposer** chaque archer dans une équipe ; au doigt : toucher l'archer, puis la case.
   Les cases possibles s'éclairent en vert.
-- **Composer automatiquement tous les clubs** place les clubs qui ont exactement une femme et un homme non placés.
+- **Composer automatiquement** (un club, ou tous les clubs) associe dans chaque catégorie les femmes et les hommes
+  non placés, dans l'ordre de la liste. Les archers en trop restent non placés ; ajustez ensuite par glisser-déposer.
 - Un archer ne va que dans une équipe de **sa division d'inscription**. Seule exception : un archer
   d'arc classique placé en NEO passe en division NE (et inversement), après confirmation.
 - Les archers inscrits dans une division hors TDM sont signalés.
+- Un archer saisi ou importé dans IANSEO arrive dans **« Non placés »**, même si « Épreuve Équipe Mixte » est cochée
+  (IANSEO la coche par défaut, sans numéro d'équipe).
 
 ## 3. Qualifications
 
@@ -58,6 +66,11 @@ Mini-qualification par équipe : 5 volées de 4 flèches (2 par archer).
    (une par équipe, dans l'ordre des cibles, avec le QR code Scorekeeper s'il est activé) et classement.
 3. **Saisie** : **Ouvrir la saisie** du départ, puis entrer le score de chaque équipe et ses nombres de 10 et de 9
    (départage). Un seul départ est ouvert à la fois. Une case vide retire l'équipe du classement.
+4. **Pile ou face** : à égalité parfaite (même score, mêmes 10, mêmes 9), une colonne « 🪙 Pile ou face »
+   apparaît pour les équipes concernées : cochez le vainqueur (à trois équipes ou plus, choisissez l'ordre),
+   puis enregistrez. Sans égalité, la colonne n'est pas affichée. Le pile ou face est à refaire si un score change.
+5. **✅ Valider vers les poules** : remplit les poules avec ce classement (score, 10, 9, pile ou face). Le bouton
+   reste grisé tant qu'un pile ou face n'est pas fait. « Refaire la validation » efface les matchs de poule déjà saisis.
 
 ## 4. Répartition des poules
 
@@ -66,9 +79,10 @@ serpentin (1, 2, 3 puis 6, 5, 4…), comme la feuille « Poules (aide) » du cla
 retenue est encadrée en rose ; elle se change à l'étape 4 de la Configuration, **avant** la validation.
 Impression en PDF.
 
-## 5. Validation qualif → poules (page IANSEO)
+## 5. Validation qualif → poules
 
-La page native d'IANSEO départage les égalités restantes (tirage au sort) et remplit les poules.
+Le bouton **✅ Valider vers les poules** de la page Qualifications fait la validation IANSEO avec le classement du
+règlement. La page native (barre TDM, « Validation ») reste utilisable : il faut alors y reporter le pile ou face.
 
 ## 6. Poules
 
@@ -76,13 +90,15 @@ La page native d'IANSEO départage les égalités restantes (tirage au sort) et 
    ou toutes poules. Les matchs contre un bye n'ont pas de feuille.
 2. **Appliquer les byes 5-0** : un match contre une place vide compte comme une victoire 5-0
    (2 points + 5 points de set). À refaire si la validation est refaite.
-3. **✎ Saisir les matchs** : saisie IANSEO.
+3. **✎ Saisir les matchs** (par poule ou toutes) : saisie IANSEO, ouverte seulement une fois la catégorie validée vers les poules.
 4. Poule terminée : **Départager par la qualif**. À égalité de points et de points de set, la meilleure
    qualification passe devant. Une nouvelle saisie de match efface ce départage.
 
 ## 7. Big Shoot Off
 
-Le BSO réunit les **1ers de poule** (poule unique : les **deux premiers**). Volées de 2 flèches
+Le BSO réunit les **1ers de poule** (poule unique : les **deux premiers**).
+Avec une **poule unique**, le BSO est au choix de l'organisateur : bouton « Ne pas faire de BSO » sur la carte de la
+catégorie. Sans BSO, le classement de la poule fait le classement final (1er 10 points, 2e 9 points, 3e 4, 4e 3). Volées de 2 flèches
 (une par archer) en 40 s : toutes les équipes → 4 → 2 → finale.
 
 1. Poules terminées : **Confirmer les équipes du BSO** (le module propose les équipes et leurs cibles).

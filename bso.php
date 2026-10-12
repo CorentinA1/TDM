@@ -49,6 +49,16 @@ if ($action !== '') {
     } elseif ($action === 'delete') {
         tdm_bso_delete($ev);
         $flash['ok'] = "{$ev->Name} : BSO supprimé.";
+    } elseif ($action === 'nobso' && (int) $ev->Pools === 1) {
+        // Poule unique : BSO au choix de l'organisateur. Sans BSO, le classement de la poule fait foi.
+        $on = ($_POST['on'] ?? '') === '1';
+        if (!$on && tdm_bso_teams($ev)) {
+            $flash['err'] = "{$ev->Name} : supprimez d'abord le BSO déjà confirmé.";
+        } else {
+            tdm_set_bso_enabled($ev, $on);
+            $flash['ok'] = "{$ev->Name} : " . ($on ? 'BSO entre les deux premiers de la poule.'
+                : 'pas de BSO, classement final = classement de la poule (1er 10 points, 2e 9 points).');
+        }
     }
     tdm_flash($flash);
     header('Location: ' . $TDM_ROOT . 'bso.php#ev-' . rawurlencode($code));
@@ -115,6 +125,8 @@ echo tdm_styles();
 #tdm .qr small a { color:var(--bleu); }
 #tdm button.danger { background:#fff; border:1px solid var(--rouge); color:var(--rouge); font-weight:600;
                      padding:7px 14px; border-radius:6px; cursor:pointer; }
+#tdm form.nobso { display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:var(--bleu-clair); border-radius:6px; padding:8px 12px; margin:0 0 12px; }
+#tdm form.nobso button { padding:4px 12px; font-size:12px; border-radius:6px; cursor:pointer; background:#fff; border:1px solid var(--bleu); color:var(--bleu); font-weight:600; }
 </style>
 <div id="tdm">
     <?= tdm_header('bso', 'Départage les 1ers de poule (poule unique : les deux premiers) par le Big Shoot Off.', [
@@ -142,7 +154,9 @@ echo tdm_styles();
     <div class="card" id="ev-<?= tdm_h($code) ?>">
         <h3>
             <?= tdm_h($ev->Name) ?>
-            <?php if ($state && $state['finished']): ?>
+            <?php if (!tdm_bso_enabled($ev)): ?>
+                <span class="tag">Sans BSO (poule unique)</span>
+            <?php elseif ($state && $state['finished']): ?>
                 <span class="tag ok">BSO terminé</span>
             <?php elseif ($state): ?>
                 <span class="tag">Volée <?= $state['current'] ?> en cours</span>
@@ -153,6 +167,22 @@ echo tdm_styles();
             <?php endif; ?>
         </h3>
         <div>
+            <?php $bsoOn = tdm_bso_enabled($ev);
+            if ((int) $ev->Pools === 1): ?>
+            <form method="post" action="<?= tdm_h($TDM_ROOT . 'bso.php') ?>" class="nobso">
+                <?= tdm_token_field() ?><input type="hidden" name="action" value="nobso">
+                <input type="hidden" name="ev" value="<?= tdm_h($code) ?>"><input type="hidden" name="on" value="<?= $bsoOn ? 0 : 1 ?>">
+                <span>Poule unique : le BSO est au choix de l'organisateur.
+                    <b><?= $bsoOn ? 'BSO entre les deux premiers.' : 'Pas de BSO : le classement de la poule fait le classement final.' ?></b></span>
+                <?php if ($canWrite): ?>
+                    <button type="submit" class="ghost"><?= $bsoOn ? 'Ne pas faire de BSO' : 'Faire un BSO' ?></button>
+                <?php endif; ?>
+            </form>
+            <?php endif; ?>
+            <?php if (!$bsoOn): ?>
+                <p class="help">Places : 1er de poule 1er (10 points), 2e 2e (9 points), 3e 3e (4 points), 4e 4e (3 points).
+                    Voir les <a href="<?= tdm_h($TDM_ROOT . 'resultats.php#ev-' . rawurlencode($code)) ?>">résultats</a>.</p>
+            <?php else: ?>
         <?php if ($showForm): ?>
             <?php if (!$prop['ready']): ?>
                 <div class="msg warn">Poules pas terminées : <?= tdm_h($prop['why'] ?: 'aucune équipe classée') ?>.
@@ -260,6 +290,7 @@ echo tdm_styles();
                 <?php endif; ?>
             </div>
         <?php endif; ?>
+            <?php endif; ?>
         </div>
     </div>
     <?php endforeach; ?>

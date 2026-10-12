@@ -15,6 +15,8 @@ require_once __DIR__ . '/lib/setup.php';
 tdm_require(AclParticipants, AclReadOnly);
 
 $canWrite = hasFullACL(AclParticipants, '', AclReadWrite) && !IsBlocked(BIT_BLOCK_PARTICIPANT);
+// Archers saisis ou importés dans IANSEO, cochés « équipe mixte » sans numéro : non placés.
+$released = $canWrite ? tdm_setup_release_unnumbered() : 0;
 $cats = [];
 foreach (TDM_CATEGORIES as $code => $c) $cats[$code] = ['div' => $c['div'], 'name' => $c['name']];
 
@@ -73,11 +75,14 @@ echo tdm_styles();
 <div id="tdm">
     <?= tdm_header('equipes', 'Forme les équipes : une femme et un homme du même club. Tout est enregistré automatiquement.', [
         'Glissez chaque archer dans une équipe (au doigt : touchez l\'archer, puis la case). Les cases possibles s\'éclairent en vert.',
-        'Ou <b>Composer automatiquement</b> les clubs qui ont exactement une femme et un homme non placés.',
+        'Ou <b>Composer automatiquement</b> : associe les femmes et les hommes non placés de chaque catégorie, dans l\'ordre de la liste.',
         'Vérifiez les clubs à compléter, puis revenez à la Configuration (étape 4).',
     ], 'Un archer ne va que dans une équipe de sa division d\'inscription. Seule exception : arc classique ↔ NEO, après confirmation. '
         . 'Le remettre dans « Non placés » le retire de l\'équipe.', [$TDM_ROOT . 'preconfig.php#step4', 'Configuration']) ?>
 
+    <?php if ($released): ?><div class="msg warn"><?= $released . ' archer(s) coché(s) « Épreuve Équipe Mixte » sans numéro d\'équipe (saisie ou import IANSEO) : remis dans « Non placés », ou dans leur équipe IANSEO s\'ils en ont déjà une.' ?></div><?php endif; ?>
+    <?php if ($ghostMsg = tdm_setup_ghosts_message(tdm_setup_ghosts())): ?><div class="msg err"><?= tdm_h($ghostMsg) ?>
+        <a href="<?= tdm_h($TDM_ROOT . 'preconfig.php#step4') ?>">Configuration, étape 4</a></div><?php endif; ?>
     <div id="valid"></div>
     <?php if (!$canWrite): ?>
         <div class="msg warn">Lecture seule : il faut le droit d'écriture sur les participants (et que la liste ne soit pas verrouillée).</div>
@@ -88,7 +93,7 @@ echo tdm_styles();
         <input type="search" id="q" placeholder="Filtrer : club, nom, licence…">
         <label><input type="checkbox" id="only"> Clubs à compléter seulement</label>
         <?php if ($canWrite): ?>
-            <button type="button" class="ghost" id="autoAll" title="Dans chaque club et chaque catégorie où il y a exactement une femme et un homme non placés">Composer automatiquement tous les clubs</button>
+            <button type="button" class="ghost" id="autoAll" title="Dans chaque club et chaque catégorie : associe les femmes et les hommes non placés, dans l'ordre de la liste">Composer automatiquement tous les clubs</button>
         <?php endif; ?>
         <span id="saved"></span>
     </div>

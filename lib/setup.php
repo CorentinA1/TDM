@@ -208,10 +208,39 @@ function tdm_remove_changes(array $archers, $id)
 }
 
 /**
+ * Archers engagés en équipe mixte sans numéro d'équipe : remis dans les non
+ * placés. Fonction pure.
+ *
+ * La saisie IANSEO et l'import cochent « Épreuve Équipe Mixte » par défaut, sans
+ * numéro : IANSEO les mettrait tous dans l'équipe 1 de leur club. Le module, lui,
+ * donne toujours un numéro (1 et plus) à un archer qu'il place. Un archer qui
+ * fait déjà partie d'une équipe formée par IANSEO (TeamComponent) n'est pas
+ * retiré, ce serait défaire une équipe qui a peut-être déjà tiré : il reprend
+ * le numéro de cette équipe.
+ *
+ * @param array $archers EnId => [club, sex, div, cls, mix, sub, status] (tdm_setup_place_input()).
+ * @param array<int, int> $protected EnId => numéro de son équipe IANSEO.
+ * @return array<int, array{div: string, mix: int, sub: int}>
+ */
+function tdm_unnumbered_changes(array $archers, array $protected = [])
+{
+    $changes = [];
+    foreach ($archers as $id => $a) {
+        if (empty($a['mix']) || (int) $a['sub'] > 0 || (int) $a['status'] > 1) continue;
+        if (tdm_category_of_div($a['div']) === null) continue;
+        $sub = (int) ($protected[$id] ?? 0);
+        $changes[$id] = ['div' => $a['div'], 'mix' => $sub > 0 ? 1 : 0, 'sub' => max(0, $sub)];
+    }
+    return $changes;
+}
+
+/**
  * « Composer automatiquement » un club. Fonction pure.
  *
- * Dans chaque catégorie où le club a exactement une femme et un homme non
- * placés, forme une équipe avec le premier numéro libre.
+ * Dans chaque catégorie, associe les femmes et les hommes non placés du club
+ * dans l'ordre de la liste (1re femme + 1er homme, etc.), avec les premiers
+ * numéros d'équipe libres. Les archers en trop (plus de femmes que d'hommes, ou
+ * l'inverse) restent non placés.
  *
  * @return array<int, array{div: string, mix: int, sub: int}>
  */
@@ -226,10 +255,11 @@ function tdm_auto_changes(array $archers, $club)
             if (empty($a['mix'])) $free[(int) $a['sex'] === 1 ? 1 : 0][] = $id;
             else $used[max(1, (int) $a['sub'])] = true;
         }
-        if (count($free[1]) !== 1 || count($free[0]) !== 1) continue;
-        $sub = 1;
-        while (isset($used[$sub])) $sub++;
-        foreach ([$free[1][0], $free[0][0]] as $id) $changes[$id] = ['div' => $c['div'], 'mix' => 1, 'sub' => $sub];
+        $sub = 0;
+        for ($i = 0; $i < min(count($free[1]), count($free[0])); $i++) {
+            do $sub++; while (isset($used[$sub]));
+            foreach ([$free[1][$i], $free[0][$i]] as $id) $changes[$id] = ['div' => $c['div'], 'mix' => 1, 'sub' => $sub];
+        }
     }
     return $changes;
 }
@@ -560,6 +590,27 @@ function tdm_setup_composition_state()
     ];
 }
 
+/**
+ * Remet dans les non placés les archers engagés en équipe mixte sans numéro
+ * (saisie IANSEO, import), voir tdm_unnumbered_changes().
+ *
+ * @return int Nombre d'archers corrigés (non placés, ou numéro de leur équipe IANSEO).
+ */
+function tdm_setup_release_unnumbered()
+{
+    global $TDM_TOUR;
+    $archers = tdm_setup_archers();
+    // Membres des équipes déjà formées par IANSEO pour les épreuves TDM.
+    $protected = [];
+    if ($events = tdm_events()) {
+        $rs = safe_r_sql("SELECT TcId, TcSubTeam FROM TeamComponent WHERE TcTournament = " . StrSafe_DB($TDM_TOUR)
+            . " AND TcEvent IN (" . implode(',', array_map('StrSafe_DB', array_keys($events))) . ")");
+        while ($r = safe_fetch($rs)) $protected[(int) $r->TcId] = max(1, (int) $r->TcSubTeam);
+    }
+    $changes = tdm_unnumbered_changes(tdm_setup_place_input($archers), $protected);
+    return $changes ? tdm_setup_save_composition($changes, $archers) : 0;
+}
+
 /** Classes qui acceptent une division (ClDivisionsAllowed vide = toutes). */
 function tdm_setup_class_divisions()
 {
@@ -609,6 +660,66 @@ function tdm_setup_save_composition(array $changes, array $archers)
 // ── Étape 4 : épreuves et Round Robin ─────────────────────────────────────────
 
 /**
+ * Archers disparus des équipes déjà formées : membres d'une équipe IANSEO
+ * (TeamComponent) qui ne sont plus dans la compétition, typiquement après une
+ * suppression puis un nouvel import des archers. Les équipes, scores et poules
+ * de ces épreuves portent alors sur des archers qui n'existent plus.
+ *
+ * @return array<string, int> code d'épreuve => nombre d'archers disparus (épreuves concernées seulement).
+ */
+function tdm_setup_ghosts()
+{
+    global $TDM_TOUR;
+    $events = tdm_events();
+    if (!$events) return [];
+    $tour = StrSafe_DB($TDM_TOUR);
+    $rs = safe_r_sql("SELECT TcEvent, COUNT(*) AS N FROM TeamComponent
+        LEFT JOIN Entries ON EnId = TcId AND EnTournament = TcTournament
+        WHERE TcTournament = $tour AND EnId IS NULL
+          AND TcEvent IN (" . implode(',', array_map('StrSafe_DB', array_keys($events))) . ")
+        GROUP BY TcEvent");
+    $out = [];
+    while ($r = safe_fetch($rs)) $out[$r->TcEvent] = (int) $r->N;
+    return $out;
+}
+
+/**
+ * Supprime les équipes IANSEO d'une épreuve dont un membre n'est plus dans la
+ * compétition (lignes Teams et TeamComponent de ces équipes seulement).
+ *
+ * @return int Nombre d'équipes supprimées.
+ */
+function tdm_setup_purge_ghosts($code)
+{
+    global $TDM_TOUR;
+    $tour = StrSafe_DB($TDM_TOUR);
+    $ev = StrSafe_DB($code);
+    $rs = safe_r_sql("SELECT DISTINCT TcCoId, TcSubTeam, TcFinEvent FROM TeamComponent
+        LEFT JOIN Entries ON EnId = TcId AND EnTournament = TcTournament
+        WHERE TcTournament = $tour AND TcEvent = $ev AND EnId IS NULL");
+    $n = 0;
+    while ($t = safe_fetch($rs)) {
+        $key = "AND TcCoId = " . intval($t->TcCoId) . " AND TcSubTeam = " . intval($t->TcSubTeam) . " AND TcFinEvent = " . intval($t->TcFinEvent);
+        safe_w_sql("DELETE FROM TeamComponent WHERE TcTournament = $tour AND TcEvent = $ev $key");
+        safe_w_sql("DELETE FROM Teams WHERE TeTournament = $tour AND TeEvent = $ev AND TeCoId = " . intval($t->TcCoId)
+            . " AND TeSubTeam = " . intval($t->TcSubTeam) . " AND TeFinEvent = " . intval($t->TcFinEvent));
+        $n++;
+    }
+    return $n;
+}
+
+/** Texte de l'alerte pour les archers disparus (vide s'il n'y en a pas). */
+function tdm_setup_ghosts_message(array $ghosts)
+{
+    if (!$ghosts) return '';
+    $list = [];
+    foreach ($ghosts as $code => $n) $list[] = "$code ($n)";
+    return 'Équipes formées avec des archers qui ne sont plus dans la compétition (supprimés ou réimportés) : '
+        . implode(', ', $list) . '. Leurs scores et leurs poules ne correspondent plus. Recomposez les équipes, puis à l\'étape 4 '
+        . 'de la Configuration cochez la catégorie et « Je confirme » : les poules sont vidées et ces équipes supprimées. Refaites ensuite la qualification et la validation.';
+}
+
+/**
  * État des 4 épreuves.
  *
  * @return array<string, object> code => Exists, RoundRobin, Mixed, Rules (règles femmes / hommes),
@@ -620,6 +731,7 @@ function tdm_setup_events()
     global $TDM_TOUR;
     $tour = StrSafe_DB($TDM_TOUR);
     $out = [];
+    $ghosts = tdm_setup_ghosts();
     foreach (TDM_CATEGORIES as $code => $c) {
         $ev = StrSafe_DB($code);
         $rs = safe_r_sql("SELECT EvElimType, EvElim1, EvMixedTeam, EvMultiTeam, EvE1ShootOff FROM Events
@@ -672,6 +784,8 @@ function tdm_setup_events()
             elseif (!$s->Seeded) $s->Problems[] = 'ordre de remplissage des poules (serpentin) absent';
             if ($s->Groups && !$s->Targets) $s->Problems[] = 'cibles des matchs non attribuées';
             elseif (!$s->Settings) $s->Problems[] = 'réglages des matchs différents du règlement (4 volées de 4 flèches, victoire 2 points)';
+            if (!empty($ghosts[$code])) $s->Problems[] = $ghosts[$code] . ' archer(s) des équipes formées ne sont plus dans la compétition (supprimés ou réimportés) : '
+                . ($s->Validated || $s->Scored ? 'cochez « Je confirme » pour vider les poules et supprimer ces équipes' : 'recomposez les équipes');
         }
         $s->Ok = !$s->Problems;
         $out[$code] = $s;
@@ -684,7 +798,7 @@ function tdm_setup_events()
  *
  * @return string[] Ce qui a été fait.
  */
-function tdm_setup_apply_event($code, $groups, $size, $start = 0)
+function tdm_setup_apply_event($code, $groups, $size, $start = 0, $reset = false)
 {
     global $TDM_TOUR;
     require_once HTDOCS . '/Common/Fun_Various.inc.php';
@@ -748,13 +862,16 @@ function tdm_setup_apply_event($code, $groups, $size, $start = 0)
     $set = "RrLevTournament = $tour, RrLevLevel = 1, RrLevEvent = $ev, RrLevTeam = 1, "
          . "RrLevGroups = " . intval($groups) . ", RrLevGroupArchers = " . intval($size);
     safe_w_sql("INSERT INTO RoundRobinLevel SET $set ON DUPLICATE KEY UPDATE $set");
-    if (safe_w_affected_rows()) {
+    // $reset : poules vidées même sans changement (« Je confirme » coché à l'étape 4).
+    if (safe_w_affected_rows() || $reset) {
         createRound(1, $code, 1);
         safe_w_sql("DELETE FROM RoundRobinParticipants WHERE RrPartTournament = $tour AND RrPartTeam = 1
             AND RrPartEvent = $ev AND RrPartLevel = 0 AND RrPartGroup = 0");
         // Les poules sont vides : la qualif doit être validée à nouveau.
         safe_w_sql("UPDATE Events SET EvE1ShootOff = 0 WHERE $where");
-        $done[] = "$groups poule(s) de $size";
+        $done[] = "$groups poule(s) de $size" . ($reset ? ' (poules vidées)' : '');
+        // Équipes formées avec des archers qui ne sont plus dans la compétition.
+        if ($reset && ($purged = tdm_setup_purge_ghosts($code))) $done[] = "$purged équipe(s) d'archers disparus supprimée(s)";
     }
     $key = "RrLevTournament = $tour AND RrLevTeam = 1 AND RrLevEvent = $ev AND RrLevLevel = 1";
     $sql = [];

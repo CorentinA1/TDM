@@ -28,7 +28,7 @@ foreach ($events as $code => $ev) {
     if (!$first) $pdf->AddPage();
     $first = false;
 
-    $teams = tdm_rep_order(tdm_event_teams($ev));
+    $teams = tdm_rep_order(tdm_event_teams_ranked($ev)[0]);
     $n = count($teams);
     $current = $ev->Pools ? [$ev->Pools, $ev->PoolSize] : null;
 

@@ -59,5 +59,5 @@ if ($error !== null) {
 }
 $n = $changes ? tdm_setup_save_composition($changes, $archers) : 0;
 $msg = $act === 'auto' ? ($n ? (count($changes) / 2) . ' équipe(s) formée(s).' : 'Rien à composer automatiquement : '
-    . 'il faut exactement une femme et un homme non placés dans une catégorie.') : '';
+    . 'il faut au moins une femme et un homme non placés dans une même catégorie.') : '';
 tdm_json(['ok' => true, 'msg' => $msg, 'state' => tdm_setup_composition_state()]);

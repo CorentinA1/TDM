@@ -57,7 +57,8 @@ if ($action !== '') {
                 $warn[] = "$code : poules déjà remplies — cochez « Je confirme » pour les recréer (matchs effacés).";
                 continue;
             }
-            $done = tdm_setup_apply_event($code, $groups, $size, max(0, min(999, intval($row['start'] ?? 0))));
+            $reset = ($s->Validated || $s->Scored) && !empty($row['force']);
+            $done = tdm_setup_apply_event($code, $groups, $size, max(0, min(999, intval($row['start'] ?? 0))), $reset);
             $ok[] = "$code : " . ($done ? implode(', ', $done) : 'déjà en place');
         }
         if ($ok) $flash['ok'] = 'Étape 4 — ' . implode(' ; ', $ok) . '.';
@@ -106,6 +107,11 @@ if ($action !== '') {
     exit;
 }
 $flash = tdm_flash();
+// Archers saisis ou importés dans IANSEO, cochés « équipe mixte » sans numéro : non placés.
+if (hasFullACL(AclParticipants, '', AclReadWrite) && !IsBlocked(BIT_BLOCK_PARTICIPANT) && ($rel = tdm_setup_release_unnumbered())) {
+    $flash = (array) $flash;
+    $flash['warn'] = trim(($flash['warn'] ?? '') . ' ' . $rel . ' archer(s) coché(s) « Épreuve Équipe Mixte » sans numéro d\'équipe (saisie ou import IANSEO) : remis dans « Non placés », ou dans leur équipe IANSEO s\'ils en ont déjà une.');
+}
 
 // ── État ──────────────────────────────────────────────────────────────────────
 $s1 = tdm_setup_step1();
@@ -364,7 +370,7 @@ function tdm_check_line($ok, $text)
                             <span class="p"></span>
                             <?php if ($filled): ?>
                                 <label class="force" hidden><input type="checkbox" name="ev[<?= $code ?>][force]" value="1">
-                                    Je confirme : les poules seront vidées et les matchs effacés</label>
+                                    Je confirme : vider les poules et effacer les matchs (validation qualif → poules à refaire)</label>
                             <?php endif; ?>
                         </td>
                     </tr>
@@ -430,9 +436,10 @@ function tdm_check_line($ok, $text)
                 if (zv % 2) h += '<span class="w">taille impaire : une équipe au repos par tour</span>';
             }
             out.innerHTML = h;
-            if (force) force.hidden = (gv === +tr.dataset.groups && zv === +tr.dataset.size);
+            if (force) force.hidden = !on.checked;
         }
         [g, z, t].forEach(function (i) { i.addEventListener('input', function () { on.checked = true; upd(); }); });
+        on.addEventListener('change', upd);
         upd();
     });
 })();

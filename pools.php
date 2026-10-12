@@ -140,8 +140,14 @@ echo tdm_styles();
         <div>
             <?php if ($ev->Pools): ?>
             <div class="shortcuts">
-                <?php if ($filled && hasFullACL(AclRobin, '', AclReadWrite)): ?>
-                    <a href="<?= tdm_h($CFG->ROOT_DIR . 'Modules/RoundRobin/InsertPoint.php?team=1&event=' . rawurlencode($code) . '&level=1') ?>">✎ Saisir les matchs</a>
+                <?php if ($filled && hasFullACL(AclRobin, '', AclReadWrite)):
+                    // Saisie IANSEO, ouverte directement sur une poule (ou toutes).
+                    $ip = $CFG->ROOT_DIR . 'Modules/RoundRobin/InsertPoint.php?team=1&event=' . rawurlencode($code) . '&level=1'; ?>
+                    <span class="lbl" style="min-width:0">✎ Saisir les matchs :</span>
+                    <?php for ($g = 1; $g <= $ev->Pools; $g++): ?>
+                        <a href="<?= tdm_h($ip . '&group=' . $g) ?>">Poule <?= $g ?></a>
+                    <?php endfor; ?>
+                    <?php if ($ev->Pools > 1): ?><a href="<?= tdm_h($ip) ?>">Toutes</a><?php endif; ?>
                 <?php endif; ?>
                 <a href="<?= tdm_h($TDM_ROOT . 'repartition.php?ev=' . rawurlencode($code) . '&from=poules') ?>">Répartition des poules</a>
                 <a href="<?= tdm_h($TDM_ROOT . 'pdf-pasdetir.php') ?>" target="_blank">🖨 Plan du pas de tir</a>
@@ -170,8 +176,8 @@ echo tdm_styles();
                 <p class="help">Réglez les poules dans la <a href="<?= tdm_h($TDM_ROOT . 'preconfig.php#step4') ?>">configuration</a>
                     (étape 4), puis faites la validation qualif → poules.</p>
             <?php elseif (!$filled): ?>
-                <p class="help"><?= $ev->Pools ?> poule(s) de <?= $ev->PoolSize ?>. Faites la validation qualif → poules
-                    pour les remplir.</p>
+                <p class="help"><?= $ev->Pools ?> poule(s) de <?= $ev->PoolSize ?>. La saisie des matchs (IANSEO) n'ouvre qu'après la
+                    validation qualif → poules : saisissez la qualification, puis <a href="<?= tdm_h($TDM_ROOT . 'qualif.php#ev-' . rawurlencode($code)) ?>">✅ Valider vers les poules</a>.</p>
             <?php else: ?>
                 <?php if ($canWrite): ?>
                 <div class="actions">

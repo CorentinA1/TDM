@@ -1,7 +1,7 @@
 {
-    "version": "1.0.1",
-    "date": "2026-10-12",
-    "notes": "1.0.1 — Documentation : README court, détails dans docs/ (installation, utilisation, données). 1.0.0 — Première version : configuration d'une manche, composition des équipes, départs et cibles, qualification par équipe, répartition et poules, Big Shoot Off (saisie au téléphone, écran public), résultats (PDF, extraction Excel), mise à jour et désinstallation depuis IANSEO.",
+    "version": "1.0.2",
+    "date": "2026-10-13",
+    "notes": "1.0.2 — Qualifications : pile ou face à égalité parfaite et bouton « Valider vers les poules ». Équipes : archers importés dans « Non placés », « Composer automatiquement » pour tous, alerte « archers disparus ». Configuration : « Je confirme » vide les poules sans changer la configuration. Poules : saisie par poule, pas de 0 pour un bye dans le PDF. Classement : poule unique sans BSO au choix. 1.0.1 — Documentation : README court, détails dans docs/ (installation, utilisation, données). 1.0.0 — Première version : configuration d'une manche, composition des équipes, départs et cibles, qualification par équipe, répartition et poules, Big Shoot Off (saisie au téléphone, écran public), résultats (PDF, extraction Excel), mise à jour et désinstallation depuis IANSEO.",
     "tables": [
         "TdmBsoTeams",
         "TdmBsoEnds"

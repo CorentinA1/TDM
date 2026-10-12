@@ -71,7 +71,7 @@ echo tdm_styles();
 
     <?php foreach ($events as $code => $ev):
         if ($only !== '' && $only !== $code) continue;
-        $teams = tdm_rep_order(tdm_event_teams($ev));
+        $teams = tdm_rep_order(tdm_event_teams_ranked($ev)[0]);
         $n = count($teams);
         $scored = count(array_filter($teams, fn($t) => $t->Score !== null));
         $ranks = array_count_values(array_filter(array_map(fn($t) => $t->Rank, $teams)));

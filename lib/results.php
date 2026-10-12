@@ -52,7 +52,8 @@ function tdm_category_results($ev)
         foreach ($state['places'] as $p) $bsoPlaces[$p['key']] = (int) $p['place'];
     }
 
-    $ranking = tdm_final_ranking(max(1, (int) $ev->Pools), $poolRanks, $bsoPlaces);
+    $withBso = tdm_bso_enabled($ev);
+    $ranking = tdm_final_ranking(max(1, (int) $ev->Pools), $poolRanks, $bsoPlaces, $withBso);
 
     // Nombre d'équipes à chaque place (ex aequo du règlement).
     $count = array_count_values(array_filter(array_column($ranking, 'place')));
@@ -72,8 +73,8 @@ function tdm_category_results($ev)
     return (object) [
         'Rows' => array_values($rows),
         'Status' => (object) ['Pools' => (int) $ev->Pools, 'Matches' => $matches, 'Played' => $played, 'ByesLeft' => $byesLeft,
-                              'BsoTeams' => $bsoTeams, 'BsoFinished' => $bsoFinished],
-        'Final' => $poolsDone && $bsoFinished,
+                              'BsoTeams' => $bsoTeams, 'BsoFinished' => $bsoFinished, 'WithBso' => $withBso],
+        'Final' => $poolsDone && ($bsoFinished || !$withBso),
     ];
 }
 
@@ -111,7 +112,8 @@ function tdm_results_status($res)
     $why = [];
     if ($s->Played < $s->Matches) $why[] = ($s->Matches - $s->Played) . ' match(s) de poule à saisir';
     if ($s->ByesLeft) $why[] = $s->ByesLeft . ' bye(s) 5-0 à appliquer';
-    if (!$s->BsoTeams) $why[] = 'BSO non confirmé';
+    if (!$s->WithBso) { /* poule unique sans BSO : classement de la poule */ }
+    elseif (!$s->BsoTeams) $why[] = 'BSO non confirmé';
     elseif (!$s->BsoFinished) $why[] = 'BSO en cours';
     return 'Provisoire' . ($why ? ' : ' . implode(', ', $why) : '');
 }

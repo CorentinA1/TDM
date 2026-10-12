@@ -50,11 +50,22 @@ while ($r = safe_fetch($rs)) {
     $g = (int) $r->RrMatchGroup;
     $rounds[$g][(int) $r->RrMatchRound][intdiv((int) $r->RrMatchMatchNo, 2)][(int) $r->RrMatchMatchNo % 2] = $r;
 }
-// Résultat de chaque équipe par rencontre ; une rencontre est jouée dès qu'une des deux équipes l'a gagnée.
+/**
+ * Rencontre jouée ? Dès qu'une des deux équipes l'a gagnée. Contre un bye,
+ * IANSEO marque le match gagné dès la validation, avec 0 : il ne compte qu'une
+ * fois le 5-0 appliqué (page Poules), sinon les cases restent vides.
+ */
+function tdm_pdf_done(array $pair)
+{
+    $bye = !(int) ($pair[0]->RrMatchAthlete ?? 0) || !(int) ($pair[1]->RrMatchAthlete ?? 0);
+    if ($bye) return (int) ($pair[0]->RrMatchSetScore ?? 0) > 0 || (int) ($pair[1]->RrMatchSetScore ?? 0) > 0;
+    return (int) ($pair[0]->RrMatchWinLose ?? 0) || (int) ($pair[1]->RrMatchWinLose ?? 0);
+}
+// Résultat de chaque équipe par rencontre.
 foreach ($rounds as $g => $byRound) {
     foreach ($byRound as $round => $pairs) {
         foreach ($pairs as $pair) {
-            $done = (int) ($pair[0]->RrMatchWinLose ?? 0) || (int) ($pair[1]->RrMatchWinLose ?? 0);
+            $done = tdm_pdf_done($pair);
             foreach ($pair as $m) {
                 if (!(int) $m->RrMatchAthlete) continue;
                 $perTeam[$g][$m->RrMatchAthlete . '-' . $m->RrMatchSubTeam][$round] = $done
@@ -125,7 +136,7 @@ foreach ($pools as $g => $pool) {
                 if (!$m) continue;
                 $isTeam = (int) $m->RrMatchAthlete > 0;
                 $name = $isTeam ? tdm_team_name((string) $m->CoName, max(1, (int) $m->RrMatchSubTeam)) : 'bye';
-                $done = (int) $m->RrMatchWinLose || ($pair[1 - $side]->RrMatchWinLose ?? 0);
+                $done = tdm_pdf_done($pair);
                 $pdf->SetFont($pdf->FontStd, 'B', 10);
                 $pdf->Cell($tgtW, $rowH, $bye ? '' : ltrim((string) $m->RrMatchTarget, '0'), 1, 0, 'C');
                 $pdf->SetFont($pdf->FontStd, $isTeam ? ((int) $m->RrMatchWinLose ? 'B' : '') : 'I', 10);
@@ -138,7 +149,7 @@ foreach ($pools as $g => $pool) {
                 }
                 $pdf->Cell($tbW, $rowH, $bye ? '' : (string) $m->RrMatchTbDecoded, 1, 0, 'C', $bye ? 1 : 0);
                 $pdf->SetFont($pdf->FontStd, 'B', 11);
-                $total = $done || ($bye && (int) $m->RrMatchSetScore) ? (string) (int) $m->RrMatchSetScore : '';
+                $total = $done ? (string) (int) $m->RrMatchSetScore : '';
                 $pdf->Cell($totW, $rowH, $isTeam ? $total : '', 1, 1, 'C');
             }
             $pdf->Ln(1.5);

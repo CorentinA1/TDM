@@ -13,6 +13,28 @@ require_once __DIR__ . '/pools.php';
 require_once __DIR__ . '/qualif.php';
 
 /**
+ * La catégorie tire-t-elle un BSO ? Toujours avec plusieurs poules ; avec une
+ * poule unique, c'est le choix de l'organisateur (règlement, section 4), oui par
+ * défaut. Paramètre de module TDM « NoBso » : liste des catégories sans BSO.
+ */
+function tdm_bso_enabled($event)
+{
+    if ((int) $event->Pools > 1) return true;
+    $no = getModuleParameter('TDM', 'NoBso', []);
+    return !(is_array($no) && !empty($no[$event->EvCode]));
+}
+
+/** Choix « pas de BSO » d'une catégorie à poule unique. */
+function tdm_set_bso_enabled($event, $on)
+{
+    $no = getModuleParameter('TDM', 'NoBso', []);
+    if (!is_array($no)) $no = [];
+    if ($on) unset($no[$event->EvCode]);
+    else $no[$event->EvCode] = 1;
+    setModuleParameter('TDM', 'NoBso', $no);
+}
+
+/**
  * Équipes que le règlement envoie au BSO, d'après le classement des poules.
  *
  * @param object $event Épreuve (tdm_events()).
