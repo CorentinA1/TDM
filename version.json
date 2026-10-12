@@ -1,7 +1,7 @@
 {
-    "version": "1.0.0",
+    "version": "1.0.1",
     "date": "2026-10-12",
-    "notes": "1.0.0 — Première version : configuration d'une manche, composition des équipes, départs et cibles, qualification par équipe, répartition et poules, Big Shoot Off (saisie au téléphone, écran public), résultats (PDF, extraction Excel), mise à jour et désinstallation depuis IANSEO.",
+    "notes": "1.0.1 — Documentation : README court, détails dans docs/ (installation, utilisation, données). 1.0.0 — Première version : configuration d'une manche, composition des équipes, départs et cibles, qualification par équipe, répartition et poules, Big Shoot Off (saisie au téléphone, écran public), résultats (PDF, extraction Excel), mise à jour et désinstallation depuis IANSEO.",
     "tables": [
         "TdmBsoTeams",
         "TdmBsoEnds"
@@ -16,6 +16,9 @@
         "bso-saisie.php",
         "bso.php",
         "cibles.php",
+        "docs/DONNEES.md",
+        "docs/INSTALLATION.md",
+        "docs/UTILISATION.md",
         "equipes-action.php",
         "equipes.php",
         "export-resultats.php",
