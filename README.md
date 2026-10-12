@@ -1,6 +1,6 @@
 # TDM — Trophée Départemental des Mixtes pour IANSEO
 
-**Version 1.0.3**
+**Version 1.0.4**
 
 Module IANSEO pour organiser une manche de **Trophée Départemental des Mixtes** (règlement FFTA 2026) :
 qualification par équipe mixte, tour de poules en sets, Big Shoot Off et classement final à points.
@@ -16,8 +16,9 @@ et ajoute ce qu'IANSEO ne fait pas pour le TDM.
 ## Documentation
 
 - [Installation, mise à jour et désinstallation](docs/INSTALLATION.md)
-- [Utilisation pas à pas](docs/UTILISATION.md) : les 8 étapes d'une manche et les droits d'accès
+- [Utilisation pas à pas](docs/UTILISATION.md) : les 9 étapes d'une manche et les droits d'accès
 - [Données et base de données](docs/DONNEES.md) : ce que le module enregistre
+- [Nouveautés de chaque version](docs/NOUVEAUTES.md)
 
 ## Licence
 

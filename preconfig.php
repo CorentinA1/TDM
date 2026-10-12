@@ -169,7 +169,7 @@ function tdm_check_line($ok, $text)
         '<b>Départs et horaires</b> : date, heure et nombre de cibles de chaque catégorie.',
         '<b>Archers et composition des équipes</b> : inscription dans IANSEO, puis les équipes.',
         '<b>Épreuves d\'équipe et poules</b> : nombre et taille des poules de chaque catégorie.',
-    ], 'Compétition créée en « Salle 18 m » FFTA. Chaque étape peut être relancée : ce qui est déjà en place n\'est pas recréé.') ?>
+    ], '<b>À faire avant le début de la compétition : la Configuration et la composition des Équipes.</b> Compétition créée en « Salle 18 m » FFTA. Chaque étape peut être relancée : ce qui est déjà en place n\'est pas recréé.') ?>
 
     <?php if ($flash): ?>
         <?php if (!empty($flash['ok'])): ?><div class="msg ok"><?= tdm_h($flash['ok']) ?></div><?php endif; ?>

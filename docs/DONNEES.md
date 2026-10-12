@@ -13,8 +13,10 @@ Pour s'appuyer sur IANSEO, il **écrit aussi dans des tables d'IANSEO**, toujour
 | `Session`, `DistanceInformation`, `Tournament` (nombre de sessions) | Configuration, étape 2 (fonctions d'IANSEO) |
 | `Entries` (division, classe, blason, numéro d'équipe) | Configuration, composition des équipes |
 | `Qualifications` (départ, cible, score d'équipe) | Configuration, cibles, saisie de la qualification |
-| `Events`, `EventClass`, `RoundRobin*` | Configuration, étape 4 ; byes 5-0 et départages des poules |
-| `Teams` | Recalcul des équipes par la fonction d'IANSEO après une saisie |
+| `Events`, `EventClass`, `RoundRobin*` | Configuration, étape 4 ; « Valider vers les poules » (validation d'IANSEO) ; byes 5-0 et départages des poules |
+| `Teams`, `TeamComponent` | Recalcul des équipes par la fonction d'IANSEO après une saisie ; « Je confirme » (étape 4) supprime les équipes d'archers disparus |
+
+Les pages Greffe et Résultats (PDF, extraction, fichier FFTA) ne font que lire.
 
 ---
 

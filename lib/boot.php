@@ -113,18 +113,19 @@ function tdm_flash($set = null)
 
 /**
  * Déroulé d'une manche : clé de page => [numéro d'étape, titre]. Sert à l'en-tête
- * commun (« Étape 3 sur 8 ») ; même ordre que la barre TDM (menu.php).
+ * commun (« Étape 4 sur 9 ») ; même ordre que la barre TDM (menu.php).
  */
 const TDM_WORKFLOW = [
     'preconfig'   => [1, 'Configuration'],
     'equipes'     => [2, 'Composition des équipes'],
-    'qualif'      => [3, 'Qualifications'],
-    'cibles'      => [3, 'Cibles de qualification'],
-    'repartition' => [4, 'Répartition des poules'],
-    'validation'  => [5, 'Validation qualif → poules'],
-    'poules'      => [6, 'Poules'],
-    'bso'         => [7, 'Big Shoot Off'],
-    'resultats'   => [8, 'Résultats'],
+    'greffe'      => [3, 'Greffe'],
+    'qualif'      => [4, 'Qualifications'],
+    'cibles'      => [4, 'Cibles de qualification'],
+    'repartition' => [5, 'Répartition des poules'],
+    'validation'  => [6, 'Validation qualif → poules'],
+    'poules'      => [7, 'Poules'],
+    'bso'         => [8, 'Big Shoot Off'],
+    'resultats'   => [9, 'Résultats'],
 ];
 
 /**

@@ -8,12 +8,13 @@ Chaque page du module rappelle en tête son rôle et ses étapes.
 |---|---|---|
 | 1 | Configuration | Préparer la compétition pour le TDM. |
 | 2 | Composition des équipes | Former les équipes femme + homme du même club. |
-| 3 | Qualifications | Attribuer les cibles, imprimer, saisir les scores par équipe. |
-| 4 | Répartition des poules | Voir comment la qualification remplit les poules. |
-| 5 | Validation qualif → poules | Page IANSEO : départager les égalités et remplir les poules. |
-| 6 | Poules | Imprimer, saisir les matchs, byes 5-0, départage. |
-| 7 | Big Shoot Off | Départager les 1ers de poule, saisie au téléphone, écran public. |
-| 8 | Résultats | Classement final à points, PDF et extraction Excel. |
+| 3 | Greffe | Imprimer la feuille de greffe, la liste des archers et des équipes inscrites. |
+| 4 | Qualifications | Attribuer les cibles, imprimer, saisir les scores par équipe. |
+| 5 | Répartition des poules | Voir comment la qualification remplit les poules. |
+| 6 | Validation qualif → poules | Page IANSEO : départager les égalités et remplir les poules. |
+| 7 | Poules | Imprimer, saisir les matchs, byes 5-0, départage. |
+| 8 | Big Shoot Off | Départager les 1ers de poule, saisie au téléphone, écran public. |
+| 9 | Résultats | Classement final à points, PDF et extraction Excel. |
 
 ## Avant de commencer
 
@@ -21,7 +22,7 @@ Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les ép
 
 ## 1. Configuration
 
-Quatre étapes, dans l'ordre. Chacune peut être relancée : ce qui est déjà en place n'est pas recréé.
+**À faire avant le début de la compétition**, comme la composition des équipes. Quatre étapes, dans l'ordre. Chacune peut être relancée : ce qui est déjà en place n'est pas recréé.
 
 1. **Division NE, classes et distances** : crée la division des néo-licenciés (arc classique), ouverte aux
    classes U13 à S3, avec les distances des seniors classiques et un blason unique de 60 cm. **Son enregistrement active le menu complet et la barre TDM.**
@@ -55,7 +56,20 @@ Une équipe = **une femme et un homme du même club**, dans la même catégorie.
 - Un archer saisi ou importé dans IANSEO arrive dans **« Non placés »**, même si « Épreuve Équipe Mixte » est cochée
   (IANSEO la coche par défaut, sans numéro d'équipe).
 
-## 3. Qualifications
+## 3. Greffe
+
+Les impressions utiles à l'accueil des archers et pendant le concours, pour toute la compétition ou pour un départ :
+
+- **Feuille de greffe** : par club, les équipes et leurs archers (licence, départ, cible), avec une case « Payé »
+  à cocher au règlement de l'inscription. Les archers sans équipe sont en fin de club.
+- **Liste des archers** : ordre alphabétique, avec licence, club, catégorie, équipe et cible.
+- **Équipes inscrites** : par catégorie, avec n° d'agrément, archers et licences, départ et cible.
+- **Listes de base d'IANSEO** (une ligne par archer) : par départ et cible, par club, alphabétique, par catégorie,
+  contrôle des inscriptions.
+
+La page rappelle aussi le nombre d'archers et d'équipes par catégorie, et signale les archers sans équipe.
+
+## 4. Qualifications
 
 Mini-qualification par équipe : 5 volées de 4 flèches (2 par archer).
 
@@ -72,19 +86,19 @@ Mini-qualification par équipe : 5 volées de 4 flèches (2 par archer).
 5. **✅ Valider vers les poules** : remplit les poules avec ce classement (score, 10, 9, pile ou face). Le bouton
    reste grisé tant qu'un pile ou face n'est pas fait. « Refaire la validation » efface les matchs de poule déjà saisis.
 
-## 4. Répartition des poules
+## 5. Répartition des poules
 
 Montre, pour chaque configuration possible, comment le classement de qualification remplit les poules en
 serpentin (1, 2, 3 puis 6, 5, 4…), comme la feuille « Poules (aide) » du classeur Excel. La configuration
 retenue est encadrée en rose ; elle se change à l'étape 4 de la Configuration, **avant** la validation.
 Impression en PDF.
 
-## 5. Validation qualif → poules
+## 6. Validation qualif → poules
 
 Le bouton **✅ Valider vers les poules** de la page Qualifications fait la validation IANSEO avec le classement du
 règlement. La page native (barre TDM, « Validation ») reste utilisable : il faut alors y reporter le pile ou face.
 
-## 6. Poules
+## 7. Poules
 
 1. **Imprimer** les feuilles de marque (dans l'ordre des rencontres) et les tableaux de poules, par poule
    ou toutes poules. Les matchs contre un bye n'ont pas de feuille.
@@ -94,7 +108,7 @@ règlement. La page native (barre TDM, « Validation ») reste utilisable : il f
 4. Poule terminée : **Départager par la qualif**. À égalité de points et de points de set, la meilleure
    qualification passe devant. Une nouvelle saisie de match efface ce départage.
 
-## 7. Big Shoot Off
+## 8. Big Shoot Off
 
 Le BSO réunit les **1ers de poule** (poule unique : les **deux premiers**).
 Avec une **poule unique**, le BSO est au choix de l'organisateur : bouton « Ne pas faire de BSO » sur la carte de la
@@ -106,7 +120,7 @@ catégorie. Sans BSO, le classement de la poule fait le classement final (1er 10
    en indiquant l'ordre des équipes.
 3. **Écran public** : à afficher sur un autre écran, il suit le BSO en direct.
 
-## 8. Résultats
+## 9. Résultats
 
 Classement final de chaque catégorie, avec son état : **définitif** ou **provisoire** (et pourquoi).
 
@@ -123,7 +137,7 @@ Classement final de chaque catégorie, avec son état : **définitif** ou **prov
 | Page | Droit IANSEO |
 |---|---|
 | Configuration | Compétition (lecture ; écriture pour appliquer les étapes) |
-| Composition des équipes | Participants |
+| Composition des équipes, Greffe | Participants |
 | Qualifications, cibles, répartition, résultats | Qualification |
 | Poules, Big Shoot Off | Round Robin |
 | Mise à jour et désinstallation | Administrateur |

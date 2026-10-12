@@ -21,6 +21,7 @@ if (!empty($on) && !empty($_SESSION['TourId'])) {
     $tdmItems = [
         ['Configuration', 'Configuration', $tdmRoot . 'preconfig.php', $tdmSetup],
         ['Composition des équipes', 'Équipes', $tdmRoot . 'equipes.php', $tdmPart],
+        ['Greffe', 'Greffe', $tdmRoot . 'greffe.php', $tdmPart],
         ['Qualifications', 'Qualifications', $tdmRoot . 'qualif.php', $tdmQual],
         ['Répartition des poules', 'Répartition', $tdmRoot . 'repartition.php', $tdmQual],
         ['Validation qualif → poules', 'Validation', $CFG->ROOT_DIR . 'Modules/RoundRobin/AbsRobin.php?team=1', $tdmRobin],
