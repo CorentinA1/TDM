@@ -4,7 +4,7 @@
  *
  * Remplace, pour le TDM, l'impression native (Modules/RoundRobin/PdfScorecards.php)
  * qui n'écrit que le nom du club : ici chaque feuille porte le nom complet de
- * l'équipe avec son numéro (« Loudun 2 »), ses deux archers et l'adversaire,
+ * l'équipe avec son numéro (« Club Alpha 2 »), ses deux archers et l'adversaire,
  * pour distribuer les feuilles sans erreur. Mise en page reprise de la feuille
  * native (deux feuilles par page, l'équipe A à gauche, l'équipe B à droite).
  *
