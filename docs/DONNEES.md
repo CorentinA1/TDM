@@ -2,7 +2,8 @@
 
 Le module crée deux tables qui lui sont propres, pour le Big Shoot Off : `TdmBsoTeams` (équipes et cibles)
 et `TdmBsoEnds` (volées). Ses réglages par compétition (départs, départ ouvert, configuration faite) sont
-rangés dans la table IANSEO `ModulesParameters`, sous le nom de module `TDM`.
+rangés dans la table IANSEO `ModulesParameters`, sous le nom de module `TDM` (dont les pile ou face, les catégories
+sans BSO et les informations du fichier FFTA).
 
 Pour s'appuyer sur IANSEO, il **écrit aussi dans des tables d'IANSEO**, toujours pour la compétition ouverte :
 

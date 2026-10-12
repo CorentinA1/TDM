@@ -114,6 +114,9 @@ Classement final de chaque catégorie, avec son état : **définitif** ou **prov
 - Points : 10, 9, 8, 7 pour les quatre premiers du BSO, 6 pour les autres équipes du BSO, puis 5 / 4 / 3
   pour les 2es / 3es / 4es de poule, 0 au-delà.
 - **🖨 PDF** (une catégorie par page) et **⬇ Excel** (fichier CSV `;`), par catégorie ou toutes catégories.
+- **Fichier de résultats pour la FFTA** (bas de la page) : le classeur Excel au format du modèle FFTA, à envoyer à
+  mixite@ffta.fr. Feuille 1 : le vainqueur de chaque catégorie ; feuille 2 : toutes les équipes, « OUI » pour les
+  vainqueurs. Le n° et le nom du comité, le lieu et la date sont pré-remplis et gardés pour la fois suivante.
 
 ## Droits d'accès
 

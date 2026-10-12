@@ -9,6 +9,7 @@
  */
 require_once __DIR__ . '/lib/boot.php';
 require_once __DIR__ . '/lib/results.php';
+require_once __DIR__ . '/lib/ffta.php';
 tdm_require(AclQualification, AclReadOnly);
 tdm_schema();
 
@@ -25,6 +26,8 @@ echo tdm_styles();
 #tdm table.list tr.unranked td { color:#9a9ea1; }
 #tdm table.list .sub { font-size:11px; color:#7d8183; }
 #tdm .bso { font-size:11px; font-weight:700; color:var(--rose); }
+#tdm form.ffta { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end; }
+#tdm form.ffta label { display:flex; flex-direction:column; gap:3px; font-size:12px; font-weight:600; }
 </style>
 <div id="tdm">
     <?= tdm_header('resultats', 'Donne le classement final et les points de chaque catégorie.', [
@@ -36,6 +39,34 @@ echo tdm_styles();
     <div class="shortcuts">
         <a href="<?= tdm_h($TDM_ROOT . 'pdf-resultats.php') ?>" target="_blank">🖨 Résultats — toutes les catégories (PDF)</a>
         <a href="<?= tdm_h($TDM_ROOT . 'export-resultats.php') ?>">⬇ Extraction — toutes les catégories (Excel)</a>
+    </div>
+    <?php // Fichier FFTA : valeurs gardées de la dernière fois, sinon tirées de la compétition.
+        $to = tdm_tournament();
+        $ffta = getModuleParameter('TDM', 'Ffta', []);
+        if (!is_array($ffta) || !$ffta) {
+            $cd = preg_match('/^10(\d{2,3})000$/', (string) ($to->ToCommitee ?? ''), $m) ? 'CD' . $m[1] : (string) ($to->ToComDescr ?? '');
+            $ffta = ['cd' => $cd, 'committee' => (string) ($to->ToComDescr ?? ''), 'place' => (string) ($to->ToWhere ?? ''),
+                     'date' => substr((string) ($to->ToWhenFrom ?? ''), 0, 10)];
+        }
+        $notFinal = array_filter($events, fn($ev) => !tdm_category_results($ev)->Final); ?>
+    <div class="card" id="ffta">
+        <h3>Fichier de résultats pour la FFTA <span class="tag">Excel, modèle FFTA</span></h3>
+        <div>
+            <p class="help">Les deux feuilles du modèle FFTA : le vainqueur de chaque catégorie, puis toutes les équipes.
+                À envoyer à mixite@ffta.fr au plus tard le <?= tdm_h(TDM_FFTA_RESULTS_DEADLINE) ?>.</p>
+            <?php if ($notFinal): ?>
+                <div class="msg warn">Résultats encore provisoires : <?= tdm_h(implode(', ', array_map(fn($e) => $e->Name, $notFinal))) ?>.
+                    Le vainqueur n'est indiqué que pour les catégories déjà classées.</div>
+            <?php endif; ?>
+            <form method="post" action="<?= tdm_h($TDM_ROOT . 'export-ffta.php') ?>" class="ffta">
+                <?= tdm_token_field() ?>
+                <label>N° du comité <input type="text" name="cd" value="<?= tdm_h($ffta['cd'] ?? '') ?>" size="8" placeholder="CD99"></label>
+                <label>Nom du comité <input type="text" name="committee" value="<?= tdm_h($ffta['committee'] ?? '') ?>" size="22" placeholder="Département (99)"></label>
+                <label>Lieu <input type="text" name="place" value="<?= tdm_h($ffta['place'] ?? '') ?>" size="22"></label>
+                <label>Date <input type="date" name="date" value="<?= tdm_h($ffta['date'] ?? '') ?>"></label>
+                <button type="submit" class="primary">⬇ Fichier FFTA (Excel)</button>
+            </form>
+        </div>
     </div>
     <?php else: ?>
         <div class="msg warn">Aucune épreuve TDM : faites d'abord la configuration.</div>

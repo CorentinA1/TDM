@@ -87,8 +87,12 @@ function tdm_result_row($t, $key, array $f, $pool, $poolRank, $bsoPlace, array $
         elseif ((int) $m->EnSex === 0 && !$man) $man = $m;
     }
     $name = fn($m) => $m ? trim($m->EnName . ' ' . $m->EnFirstName) : '';
+    // « Nom Prénom » (EnFirstName porte le nom de famille dans ianseo), comme dans le fichier FFTA.
+    $np = fn($m) => $m ? trim($m->EnFirstName . ' ' . $m->EnName) : '';
     return (object) [
         'Key' => $key, 'Name' => $t->Name ?? $key, 'ClubCode' => $t->ClubCode ?? '',
+        'Club' => isset($t->Members[0]) ? (string) $t->Members[0]->CoName : '', 'Sub' => (int) ($t->SubTeam ?? 0),
+        'WomanNP' => $np($woman), 'ManNP' => $np($man),
         'Woman' => $name($woman), 'WomanCode' => $woman->EnCode ?? '', 'Man' => $name($man), 'ManCode' => $man->EnCode ?? '',
         'Qualif' => $t->Score ?? null, 'QualifRank' => (int) ($t->Rank ?? 0),
         'Pool' => (int) $pool, 'PoolRank' => (int) $poolRank, 'PoolPoints' => $poolPts[0], 'SetPoints' => $poolPts[1],
