@@ -218,6 +218,8 @@ function tdm_check_line($ok, $text)
         (<a href="<?= tdm_h($CFG->ROOT_DIR . 'Tournament/TournamentExport.php') ?>">Compétition › Exports › Export de la compétition</a> ;
         le Big Shoot Off n'y est pas, sauvegardez aussi la base). Détails :
         <a href="https://github.com/CorentinA1/TDM/blob/main/docs/AVERTISSEMENT.md" target="_blank" rel="noopener">À lire avant d'utiliser le module</a>.</div>
+    <div class="msg" style="background:var(--bleu-clair);border:1px solid var(--bleu)">📖 <b>Mode d'emploi</b> : les étapes d'une manche, de la configuration aux résultats, sont décrites dans
+        l'<a href="https://github.com/CorentinA1/TDM/blob/main/docs/UTILISATION.md" target="_blank" rel="noopener">utilisation pas à pas</a>.</div>
 
     <!-- Étape 1 -->
     <div class="card" id="step1">
