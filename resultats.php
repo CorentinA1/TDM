@@ -53,7 +53,7 @@ echo tdm_styles();
         <h3>Fichier de résultats pour la FFTA <span class="tag">Excel, modèle FFTA</span></h3>
         <div>
             <p class="help">Les deux feuilles du modèle FFTA : le vainqueur de chaque catégorie, puis toutes les équipes.
-                À envoyer à mixite@ffta.fr au plus tard le <?= tdm_h(TDM_FFTA_RESULTS_DEADLINE) ?>.</p>
+                À envoyer à mixite@ffta.fr.</p>
             <?php if ($notFinal): ?>
                 <div class="msg warn">Résultats encore provisoires : <?= tdm_h(implode(', ', array_map(fn($e) => $e->Name, $notFinal))) ?>.
                     Le vainqueur n'est indiqué que pour les catégories déjà classées.</div>

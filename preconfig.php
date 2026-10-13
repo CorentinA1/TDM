@@ -352,6 +352,17 @@ function tdm_check_line($ok, $text)
             <span class="why">Terminez d'abord l'étape 1 : sans division NE, les néo-licenciés ne peuvent pas être inscrits.</span>
             <p class="help">Saisissez ou importez les archers dans IANSEO, puis composez les équipes : division
                 (passer les néo-licenciés en NE), « Épreuve Équipe Mixte », numéro d'équipe quand un club en a plusieurs.</p>
+            <div class="msg warn" style="margin:8px 0">
+                <b>Inscription des archers :</b>
+                <ul style="margin:4px 0 0 18px;padding:0">
+                    <li>chaque archer dans l'une des <b>4 divisions du TDM : NE, CL, BB ou CO</b> ;</li>
+                    <li>la <b>classe</b> (catégorie d'âge) n'a pas d'importance pour le classement, mais elle doit être
+                        <b>renseignée</b> : une équipe peut réunir un U13 et un S3 ;</li>
+                    <li>le <b>blason</b> est primordial : 60 cm pour NE et BB, 40 cm pour CL, trispot 40 cm pour CO.
+                        Vérifiez-le dans la liste des participants (sans blason, un archer n'a pas de cible ni de saisie
+                        Scorekeeper).</li>
+                </ul>
+            </div>
             <div class="counts">
                 <div><b><?= count($archers) ?></b>archers</div>
                 <div><b><?= $engaged ?></b>en équipe mixte</div>

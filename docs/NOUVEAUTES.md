@@ -1,5 +1,19 @@
 # Nouveautés de chaque version
 
+## 1.3.0
+
+**Poules avec Scorekeeper :** chaque feuille de marque de match porte en bas au milieu le **QR code du match**,
+le même que la feuille native d'IANSEO. Le téléphone affiche les deux équipes du match ; les scores arrivent dans la
+saisie des matchs d'IANSEO. La feuille garde le nom de l'équipe avec son numéro et ses archers, et fait foi.
+Il faut Scorekeeper réglé (adresse du serveur), l'horaire des poules (Configuration, étape 4) et les cibles.
+
+**Configuration, étape 3 :** rappel pour l'inscription des archers : une des 4 divisions du TDM (NE, CL, BB, CO),
+classe à renseigner (sans effet sur le classement : une équipe peut réunir un U13 et un S3), blason primordial.
+
+**Résultats :** la date limite d'envoi du fichier FFTA (28 avril 2026, passée) n'est plus affichée.
+
+**Documentation :** la **double manche** (cumul de deux manches) n'est pas encore gérée.
+
 ## 1.2.0
 
 **Qualifications avec Scorekeeper**, au choix pour chaque départ (Configuration, étape 2, colonne « Saisie des scores ») :

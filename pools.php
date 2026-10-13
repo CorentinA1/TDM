@@ -89,7 +89,7 @@ echo tdm_styles();
 </style>
 <div id="tdm">
     <?= tdm_header('poules', 'Suit les matchs de poule et leur classement (points de match, puis points de set).', [
-        'Imprimez les <b>feuilles de marque</b> et le <b>tableau</b> de chaque poule (pas de feuille pour les byes).',
+        'Imprimez les <b>feuilles de marque</b> et le <b>tableau</b> de chaque poule (pas de feuille pour les byes). Avec Scorekeeper réglé, chaque feuille porte le <b>QR code du match</b>.',
         '<b>Appliquer les byes 5-0</b> : un match contre une place vide compte comme une victoire 5-0. À refaire si la validation est refaite.',
         '<b>Saisir</b> les matchs (saisie IANSEO).',
         'Poule terminée : <b>Départager par la qualif</b> (à égalité, la meilleure qualif passe devant). Une nouvelle saisie efface ce départage.',
@@ -193,6 +193,7 @@ echo tdm_styles();
                         <input type="hidden" name="ev" value="<?= tdm_h($code) ?>">
                         <button type="submit" class="primary"<?= $tiesQualif ? '' : ' disabled' ?>>Départager par la qualif</button>
                     </form>
+                    <?php if (is_file(__DIR__ . '/dev/pools-button.php')) include __DIR__ . '/dev/pools-button.php'; ?>
                     <?php if ($played < $matches): ?>
                         <span class="help" style="margin:0">Classement provisoire : <?= $matches - $played ?> match(s) à saisir.</span>
                     <?php endif; ?>

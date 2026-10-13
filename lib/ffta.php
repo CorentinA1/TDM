@@ -10,7 +10,6 @@
  */
 
 /** Dates de la saison (règlement 2026, section 6) : à mettre à jour chaque saison. */
-const TDM_FFTA_RESULTS_DEADLINE = '28 avril 2026';
 const TDM_FFTA_SIGNUP = 'du 28 avril au 11 mai 2026';
 
 /** Libellés des catégories dans le modèle FFTA : [feuille 1 (court), feuille 2 (long)]. */
@@ -38,8 +37,7 @@ function tdm_ffta_sheets(array $info, array $cats)
 
     // ── Feuille 1 : qualifiés (vainqueur de chaque catégorie) ─────────────────
     $s1 = [
-        2 => ['E' => ['Feuilles 1 et 2 à nous renvoyer (format Excel) complétées par mail à mixite@ffta.fr au plus tard le '
-            . TDM_FFTA_RESULTS_DEADLINE . ' (si possible le préfixer avec votre n° de département)', TDM_XLSX_NOTE], '_h' => 45],
+        2 => ['E' => ['Feuilles 1 et 2 à nous renvoyer (format Excel) complétées par mail à mixite@ffta.fr (si possible le préfixer avec votre n° de département)', TDM_XLSX_NOTE], '_h' => 45],
         4 => ['A' => ['Nom Comité départemental :', TDM_XLSX_BOLD], 'C' => [(string) ($info['committee'] ?? ''), TDM_XLSX_BOLD],
               'E' => ["Liste des clubs qualifiés pour le Trophée National des Mixtes\nLes clubs devront inscrire leurs équipes via "
                   . "l'espace dirigeant dans la gestion sportive.\nInscriptions ouvertes " . TDM_FFTA_SIGNUP, TDM_XLSX_WRAP], '_h' => 60],
@@ -62,8 +60,7 @@ function tdm_ffta_sheets(array $info, array $cats)
 
     // ── Feuille 2 : toutes les équipes ────────────────────────────────────────
     $s2 = [
-        2 => ['C' => ['Feuille à nous renvoyer complétée par mail à mixite@ffta.fr (si possible le préfixer avec votre n° de département) '
-            . 'au plus tard le ' . TDM_FFTA_RESULTS_DEADLINE, TDM_XLSX_NOTE], '_h' => 30],
+        2 => ['C' => ['Feuille à nous renvoyer complétée par mail à mixite@ffta.fr (si possible le préfixer avec votre n° de département)', TDM_XLSX_NOTE], '_h' => 30],
         4 => ['A' => ['Lieu :', TDM_XLSX_BOLD], 'B' => [(string) ($info['place'] ?? ''), TDM_XLSX_BOLD],
               'E' => ['Date :', TDM_XLSX_BOLD], 'F' => [(string) ($info['date'] ?? ''), TDM_XLSX_DATE]],
         7 => array_combine($letters(8), $head(['Catégorie', 'Club', 'N° agrément club', 'Nom-Prénom archer Femmes',

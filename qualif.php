@@ -329,6 +329,7 @@ echo tdm_styles();
                 <?php endif; ?>
                 <a href="<?= tdm_h($CFG->ROOT_DIR . 'Qualification/PrnTeamAbs.php?Event[]=' . rawurlencode($code)) ?>" target="_blank">🖨 Classement des qualifications (PDF)</a>
                 <a href="<?= tdm_h($TDM_ROOT . 'repartition.php?ev=' . rawurlencode($code) . '&from=qualif') ?>">Répartition des poules</a>
+                <?php if (is_file(__DIR__ . '/dev/qualif-button.php')) include __DIR__ . '/dev/qualif-button.php'; ?>
                 <?php if ($canValidate):
                     $R = [];
                     foreach ($rk['ranks'] as $k => $r) $R[$k] = $r; ?>

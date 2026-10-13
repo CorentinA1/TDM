@@ -20,6 +20,9 @@ Chaque page du module rappelle en tête son rôle et ses étapes.
 
 Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les épreuves par équipe).
 
+> **Pas encore géré : la double manche.** Le module traite **une manche** par compétition IANSEO. Le cumul de deux
+> manches (classement sur deux compétitions) n'est pas encore fait.
+
 ## 1. Configuration
 
 **À faire avant le début de la compétition**, comme la composition des équipes. Quatre étapes, dans l'ordre. Chacune peut être relancée : ce qui est déjà en place n'est pas recréé.
@@ -41,7 +44,10 @@ Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les ép
    La **saisie des scores** se choisit par départ : **feuille papier** (score d'équipe saisi dans la page
    Qualifications) ou **Scorekeeper** (un téléphone par cible, voir « Départ saisi avec Scorekeeper » plus bas).
 3. **Archers et composition des équipes** : saisir ou importer les archers dans IANSEO (menu Participants),
-   puis composer les équipes (étape 2 du déroulé). Le bouton **Placer les archers dans la session de leur départ**
+   puis composer les équipes (étape 2 du déroulé). Chaque archer est inscrit dans l'une des **4 divisions du TDM :
+   NE, CL, BB ou CO**. La **classe** (catégorie d'âge) ne compte pas pour le classement mais doit être renseignée :
+   une équipe peut réunir un U13 et un S3. Le **blason** est primordial (60 cm pour NE et BB, 40 cm pour CL, trispot
+   40 cm pour CO) : sans blason, un archer n'a pas de cible ni de saisie Scorekeeper. Le bouton **Placer les archers dans la session de leur départ**
    range chaque archer dans le départ de sa catégorie.
 4. **Épreuves d'équipe et poules** : choisir le nombre de poules et leur taille pour chaque catégorie.
    Le module crée les épreuves par équipe en Round Robin et leurs cibles de poules. Seules les catégories
@@ -150,6 +156,10 @@ règlement. La page native (barre TDM, « Validation ») reste utilisable : il f
 
 1. **Imprimer** les feuilles de marque (dans l'ordre des rencontres) et les tableaux de poules, par poule
    ou toutes poules. Les matchs contre un bye n'ont pas de feuille.
+   **Scorekeeper** réglé (Compétition › Informations principales, adresse du serveur) : chaque feuille porte en
+   bas au milieu le **QR code du match**, le même que la feuille native d'IANSEO. Le téléphone affiche les deux
+   équipes du match ; il faut l'horaire des poules (Configuration, étape 4) et les cibles. La feuille reste devant
+   les archers et fait foi ; les scores arrivent dans la saisie des matchs d'IANSEO.
 2. **Appliquer les byes 5-0** : un match contre une place vide compte comme une victoire 5-0
    (2 points + 5 points de set). À refaire si la validation est refaite.
 3. **✎ Saisir les matchs** (par poule ou toutes) : saisie IANSEO, ouverte seulement une fois la catégorie validée vers les poules.

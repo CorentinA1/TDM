@@ -425,6 +425,32 @@ function tdm_isk_qr($pdf, $x, $y, $ses, $tg, $scale = 1.0, $small = false)
 }
 
 /**
+ * QR code Scorekeeper d'un match de poule par équipe : le même appel que la feuille
+ * native des poules (Modules/RoundRobin/PdfScorecards.php) —
+ * {"u":…,"c":…,"s":"<épreuve>","d":"<n° de match pair>","t":"<niveau|poule|tour>","st":"RT"}.
+ * Le téléphone ouvre le tour de la poule et affiche les deux équipes du match.
+ *
+ * @param object $m Ligne RoundRobinMatches de la 1re équipe (n° de match pair).
+ * @param float $scale Agrandissement (1 = 25 mm, comme le natif).
+ */
+function tdm_isk_match_qr($pdf, $x, $y, $event, $m, $scale = 1.0)
+{
+    require_once HTDOCS . '/Api/ISK-NG/DrawQRCode.php';
+    if ($scale != 1.0) {
+        $pdf->StartTransform();
+        $pdf->ScaleXY($scale * 100, $x, $y);
+    }
+    DrawQRCode_ISK_NG($pdf, $x, $y, $event, $m->RrMatchMatchNo, $m->RrMatchLevel . '|' . $m->RrMatchGroup . '|' . $m->RrMatchRound, 0, 'RT');
+    if ($scale != 1.0) $pdf->StopTransform();
+}
+
+/** Scorekeeper prêt pour les téléphones : API réglée et adresse du serveur joignable. */
+function tdm_isk_ready()
+{
+    return tdm_scorekeeper_enabled() && tdm_isk_server_ok((string) getModuleParameter('ISK-NG', 'ServerUrl', ''));
+}
+
+/**
  * Feuilles de marque natives d'IANSEO, complétées avec les flèches de chaque archer
  * (Qualification/PDFScore.php, option « ScoreFilled ») : une page par cible, une
  * carte par archer, cibles $from à $to du départ.

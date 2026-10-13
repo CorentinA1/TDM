@@ -11,10 +11,13 @@
  *   feuilles.php?ev=CL&group=2   une poule, dans l'ordre des rencontres (tour, puis cible)
  *   feuilles.php?ev=CL           toutes les poules de la catégorie, poule par poule
  *
- * Les byes n'ont pas de feuille.
+ * Les byes n'ont pas de feuille. Scorekeeper réglé (API et adresse du serveur) : QR code
+ * du match en bas au milieu de la page, celui de la feuille native ; le téléphone
+ * affiche les deux équipes du match. La feuille reste devant les archers et fait foi.
  */
 require_once __DIR__ . '/lib/boot.php';
 require_once __DIR__ . '/lib/qualif.php';
+require_once __DIR__ . '/lib/departs.php';
 require_once HTDOCS . '/Common/pdf/ScorePDF.inc.php';
 tdm_require(AclRobin, AclReadOnly);
 
@@ -35,7 +38,7 @@ if (!$level) exit('Poules non configurées.');
 $teams = tdm_event_teams($ev);
 
 // Matchs : deux lignes par rencontre (numéros pair / impair), dans l'ordre poule, tour, cible.
-$rs = safe_r_sql("SELECT RrMatchGroup, RrMatchRound, RrMatchMatchNo, RrMatchTarget, RrMatchAthlete, RrMatchSubTeam, CoName
+$rs = safe_r_sql("SELECT RrMatchLevel, RrMatchGroup, RrMatchRound, RrMatchMatchNo, RrMatchTarget, RrMatchAthlete, RrMatchSubTeam, CoName
     FROM RoundRobinMatches
     LEFT JOIN Countries ON CoId = RrMatchAthlete AND CoTournament = RrMatchTournament
     WHERE RrMatchTournament = $tour AND RrMatchTeam = 1 AND RrMatchEvent = $evSql AND RrMatchLevel = 1"
@@ -66,6 +69,8 @@ function tdm_sheet_team($m, array $teams)
         'target' => ltrim((string) $m->RrMatchTarget, '0'),
     ];
 }
+
+$qrOn = tdm_isk_ready();
 
 $pdf = new ScorePDF(false);
 $pdf->setPrintHeader(true);
@@ -184,5 +189,16 @@ foreach ($matches as [$m1, $m2]) {
     $pdf->SetFont($pdf->FontStd, 'I', 7);
     $pdf->Cell($pdf->GetPageWidth() - 2 * $margin - 90, 8, 'Signature de l\'arbitre', 'B', 0, 'L');
     $pdf->Cell(90, 8, 'Heure de signature (hh:mm)', 1, 1, 'L');
+    // Scorekeeper : QR du match en bas au milieu (taille native agrandie, loin des cases).
+    if ($qrOn) {
+        $qw = 30;
+        $qx = ($pdf->GetPageWidth() - $qw) / 2;
+        $qy = min($pdf->GetY() + 10, $pdf->GetPageHeight() - 22 - $qw - 5);
+        tdm_isk_match_qr($pdf, $qx, $qy, $code, $m1, $qw / 25);
+        $pdf->SetXY($qx - 40, $qy + $qw + 1);
+        $pdf->SetFont($pdf->FontStd, '', 8);
+        $pdf->Cell($qw + 80, 4, 'Scorekeeper : poule ' . $m1->RrMatchGroup . ', rencontre ' . $m1->RrMatchRound
+            . ($a['target'] !== '' ? ', cibles ' . $a['target'] . ($b['target'] !== '' && $b['target'] !== $a['target'] ? ' et ' . $b['target'] : '') : ''), 0, 1, 'C');
+    }
 }
 $pdf->Output('Feuilles ' . $code . ($group ? " poule $group" : '') . '.pdf', 'I');
