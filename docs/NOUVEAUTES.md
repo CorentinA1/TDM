@@ -1,5 +1,9 @@
 # Nouveautés de chaque version
 
+## 1.3.2
+
+- **Configuration** : encadré « Mode d'emploi » en tête de page, avec un lien vers l'[utilisation pas à pas](UTILISATION.md).
+
 ## 1.3.1
 
 - **À lire avant d'utiliser le module** ([docs/AVERTISSEMENT.md](AVERTISSEMENT.md)) : le module est indépendant d'IANSEO
