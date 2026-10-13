@@ -10,8 +10,6 @@ Il faut Scorekeeper réglé (adresse du serveur), l'horaire des poules (Configur
 **Configuration, étape 3 :** rappel pour l'inscription des archers : une des 4 divisions du TDM (NE, CL, BB, CO),
 classe à renseigner (sans effet sur le classement : une équipe peut réunir un U13 et un S3), blason primordial.
 
-**Résultats :** la date limite d'envoi du fichier FFTA (28 avril 2026, passée) n'est plus affichée.
-
 **Documentation :** la **double manche** (cumul de deux manches) n'est pas encore gérée.
 
 ## 1.2.0
