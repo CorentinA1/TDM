@@ -1,5 +1,12 @@
 # Nouveautés de chaque version
 
+## 1.3.1
+
+- **À lire avant d'utiliser le module** ([docs/AVERTISSEMENT.md](AVERTISSEMENT.md)) : le module est indépendant d'IANSEO
+  (non développé par l'équipe IANSEO ni par la FFTA), sans garantie ni SAV ; sauvegarder les compétitions
+  (l'export de la compétition ne contient pas le Big Shoot Off) ; licences d'IANSEO et du module.
+- **Configuration** : rappel de cet avertissement en tête de page, avec un lien vers l'export de la compétition.
+
 ## 1.3.0
 
 **Poules avec Scorekeeper :** chaque feuille de marque de match porte en bas au milieu le **QR code du match**,
@@ -9,6 +16,8 @@ Il faut Scorekeeper réglé (adresse du serveur), l'horaire des poules (Configur
 
 **Configuration, étape 3 :** rappel pour l'inscription des archers : une des 4 divisions du TDM (NE, CL, BB, CO),
 classe à renseigner (sans effet sur le classement : une équipe peut réunir un U13 et un S3), blason primordial.
+
+**Résultats :** la date limite d'envoi du fichier FFTA (28 avril 2026, passée) n'est plus affichée.
 
 **Documentation :** la **double manche** (cumul de deux manches) n'est pas encore gérée.
 

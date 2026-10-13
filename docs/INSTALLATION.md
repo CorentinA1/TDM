@@ -1,6 +1,7 @@
 # Installation, mise à jour et désinstallation
 
-Il faut une installation IANSEO qui fonctionne (PHP 8, MySQL ou MariaDB).
+Il faut une installation IANSEO qui fonctionne (PHP 8, MySQL ou MariaDB). Lisez d'abord
+[À lire avant d'utiliser le module](AVERTISSEMENT.md) : module indépendant d'IANSEO, sans garantie, sauvegardes.
 
 Le module doit se trouver dans `Modules/Custom/TDM`. Le nom du dossier, `TDM`, compte : les liens
 du module l'utilisent. `Modules/Custom/` est le seul dossier que les mises à jour d'IANSEO ne réécrivent pas.

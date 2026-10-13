@@ -20,6 +20,10 @@ Chaque page du module rappelle en tête son rôle et ses étapes.
 
 Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les épreuves par équipe).
 
+> **Sauvegardez la compétition** (Compétition › Exports › Export de la compétition) avant de commencer, après chaque
+> étape importante et avant toute mise à jour : le module est indépendant d'IANSEO, sans garantie ni SAV. Le Big
+> Shoot Off n'est pas dans cet export : voir [À lire avant d'utiliser le module](AVERTISSEMENT.md).
+
 > **Pas encore géré : la double manche.** Le module traite **une manche** par compétition IANSEO. Le cumul de deux
 > manches (classement sur deux compétitions) n'est pas encore fait.
 

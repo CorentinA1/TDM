@@ -213,6 +213,11 @@ function tdm_check_line($ok, $text)
         <div class="msg warn">Lecture seule : il faut le droit d'écriture sur les données de la compétition
             (et qu'elles ne soient pas verrouillées) pour appliquer les étapes.</div>
     <?php endif; ?>
+    <div class="msg warn"><b>Module indépendant d'IANSEO, sans garantie ni SAV</b> : il n'est pas développé par l'équipe
+        IANSEO et peut contenir des bugs. <b>Sauvegardez la compétition</b> avant de commencer et après chaque étape
+        (<a href="<?= tdm_h($CFG->ROOT_DIR . 'Tournament/TournamentExport.php') ?>">Compétition › Exports › Export de la compétition</a> ;
+        le Big Shoot Off n'y est pas, sauvegardez aussi la base). Détails :
+        <a href="https://github.com/CorentinA1/TDM/blob/main/docs/AVERTISSEMENT.md" target="_blank" rel="noopener">À lire avant d'utiliser le module</a>.</div>
 
     <!-- Étape 1 -->
     <div class="card" id="step1">
