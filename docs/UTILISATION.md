@@ -29,6 +29,12 @@ Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les ép
 2. **Départs et horaires** : pour chaque catégorie (NEO, CL, CO, BB), le départ, la date, l'heure et le
    nombre de cibles. Le module crée les sessions de qualification d'IANSEO et contrôle la cohérence avec les
    dates de la compétition. Une alerte signale un départ qui n'a pas assez de cibles.
+   L'**entraînement** (facultatif : heure et durée en minutes) est l'échauffement de la session dans le
+   programme horaire d'IANSEO ; il doit commencer avant le tir et s'affiche sur le plan du pas de tir. Une durée
+   saisie seule propose l'heure juste avant le tir.
+   La **durée du tir** (facultative, en minutes) est la durée de la qualification dans le programme horaire d'IANSEO ;
+   elle fixe aussi la fin de la session. Le plan du pas de tir affiche « Tir 09:00 à 11:00 », et une alerte signale un
+   tir qui déborde sur le départ suivant (entraînement compris).
 3. **Archers et composition des équipes** : saisir ou importer les archers dans IANSEO (menu Participants),
    puis composer les équipes (étape 2 du déroulé). Le bouton **Placer les archers dans la session de leur départ**
    range chaque archer dans le départ de sa catégorie.
@@ -37,6 +43,11 @@ Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les ép
    cochées sont créées ou mises à jour (modifier une ligne la coche). Pour une catégorie dont les poules sont déjà
    remplies, la case « Je confirme » vide les poules et efface les matchs : obligatoire pour changer la configuration,
    elle sert aussi à repartir de zéro (puis refaire la validation qualif → poules).
+   **Horaire** (facultatif) : l'heure du 1er tour et la durée d'un match (15 min proposées ; un tour dure entre
+   10 et 20 min). Sans heure, pas d'horaire. Toutes les poules de la catégorie tirent en
+   même temps, les tours s'enchaînent sans pause (l'aperçu donne l'heure de fin). Il est écrit dans l'horaire des matchs
+   d'IANSEO (**Matchs de Poules → Affectation des cibles**), où l'on peut l'ajuster match par match : cet horaire
+   ajusté est gardé tant que l'heure ou la durée ne changent pas à l'étape 4 (mention « horaire personnalisé »).
 
 > **Archers supprimés puis réimportés après une validation :** les équipes déjà formées pointent vers des archers
 > qui n'existent plus. Une alerte rouge le signale (Configuration, Équipes, Qualifications). Recomposez les équipes,
@@ -55,6 +66,11 @@ Une équipe = **une femme et un homme du même club**, dans la même catégorie.
 - Les archers inscrits dans une division hors TDM sont signalés.
 - Un archer saisi ou importé dans IANSEO arrive dans **« Non placés »**, même si « Épreuve Équipe Mixte » est cochée
   (IANSEO la coche par défaut, sans numéro d'équipe).
+- **Retirer toutes les équipes** remet tous les archers dans « Non placés » (après confirmation), pour recomposer
+  depuis le début.
+- **Équipes bloquées dès que la compétition a commencé** : un score de qualification saisi, des poules validées ou un
+  match de poule saisi, dans n'importe quelle catégorie. Plus aucun changement n'est possible (glisser-déposer,
+  composer automatiquement, retirer toutes les équipes). En cas de vraie erreur, effacez d'abord les scores dans IANSEO.
 
 ## 3. Greffe
 

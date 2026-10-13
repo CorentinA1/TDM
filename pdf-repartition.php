@@ -105,6 +105,6 @@ foreach ($events as $code => $ev) {
 }
 if ($first) {
     $pdf->SetFont($pdf->FontStd, '', 11);
-    $pdf->Cell($W, 10, 'Aucune épreuve TDM : faites d\'abord la configuration.', 0, 1, 'C');
+    $pdf->Cell($W, 10, 'Aucune épreuve TDM : faites d\'abord la configuration à l\'étape 4.', 0, 1, 'C');
 }
 $pdf->Output('Répartition des poules' . ($only ? " $only" : '') . '.pdf', 'I');

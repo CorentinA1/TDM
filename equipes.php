@@ -15,6 +15,8 @@ require_once __DIR__ . '/lib/setup.php';
 tdm_require(AclParticipants, AclReadOnly);
 
 $canWrite = hasFullACL(AclParticipants, '', AclReadWrite) && !IsBlocked(BIT_BLOCK_PARTICIPANT);
+// Compétition commencée (scores de qualif, poules validées, matchs) : équipes figées, sans exception.
+$started = tdm_setup_started_message(tdm_setup_started());
 // Archers saisis ou importés dans IANSEO, cochés « équipe mixte » sans numéro : non placés.
 $released = $canWrite ? tdm_setup_release_unnumbered() : 0;
 $cats = [];
@@ -34,6 +36,7 @@ echo tdm_styles();
 #tdm .tools input[type=search] { padding:5px 8px; border:1px solid var(--bord); border-radius:4px; min-width:220px; }
 #tdm button.ghost { background:#fff; border:1px solid var(--bleu); color:var(--bleu); border-radius:6px; padding:4px 10px;
                     cursor:pointer; font-weight:600; font-size:12px; }
+#tdm button.ghost:disabled { opacity:.45; cursor:not-allowed; }
 #tdm button.ghost:hover { background:var(--bleu-clair); }
 #tdm .card > h3 button.ghost { margin-left:auto; border-color:#fff; }
 #tdm .card > h3 small { font-weight:normal; opacity:.8; }
@@ -78,12 +81,12 @@ echo tdm_styles();
         'Ou <b>Composer automatiquement</b> : associe les femmes et les hommes non placés de chaque catégorie, dans l\'ordre de la liste.',
         'Vérifiez les clubs à compléter, puis revenez à la Configuration (étape 4).',
     ], 'Un archer ne va que dans une équipe de sa division d\'inscription. Seule exception : arc classique ↔ NEO, après confirmation. '
-        . 'Le remettre dans « Non placés » le retire de l\'équipe.', [$TDM_ROOT . 'preconfig.php#step4', 'Configuration']) ?>
+        . 'Le remettre dans « Non placés » le retire de l\'équipe. <b>Équipes bloquées dès que la compétition a commencé</b> (scores saisis).', [$TDM_ROOT . 'preconfig.php#step4', 'Configuration']) ?>
 
     <?php if ($released): ?><div class="msg warn"><?= $released . ' archer(s) coché(s) « Épreuve Équipe Mixte » sans numéro d\'équipe (saisie ou import IANSEO) : remis dans « Non placés », ou dans leur équipe IANSEO s\'ils en ont déjà une.' ?></div><?php endif; ?>
     <?php if ($ghostMsg = tdm_setup_ghosts_message(tdm_setup_ghosts())): ?><div class="msg err"><?= tdm_h($ghostMsg) ?>
         <a href="<?= tdm_h($TDM_ROOT . 'preconfig.php#step4') ?>">Configuration, étape 4</a></div><?php endif; ?>
-    <div id="valid"></div>
+    <?php if ($started): ?><div class="msg err"><b>Équipes bloquées.</b> <?= tdm_h($started) ?></div><?php endif; ?>
     <?php if (!$canWrite): ?>
         <div class="msg warn">Lecture seule : il faut le droit d'écriture sur les participants (et que la liste ne soit pas verrouillée).</div>
     <?php endif; ?>
@@ -92,8 +95,11 @@ echo tdm_styles();
     <div class="tools">
         <input type="search" id="q" placeholder="Filtrer : club, nom, licence…">
         <label><input type="checkbox" id="only"> Clubs à compléter seulement</label>
-        <?php if ($canWrite): ?>
+        <?php if ($canWrite && !$started): ?>
             <button type="button" class="ghost" id="autoAll" title="Dans chaque club et chaque catégorie : associe les femmes et les hommes non placés, dans l'ordre de la liste">Composer automatiquement tous les clubs</button>
+            <button type="button" class="ghost" id="clearAll" title="Défait toutes les équipes : tous les archers reviennent dans « Non placés »">Retirer toutes les équipes</button>
+        <?php elseif ($canWrite): ?>
+            <button type="button" class="ghost" disabled title="La compétition a commencé : équipes bloquées">Retirer toutes les équipes</button>
         <?php endif; ?>
         <span id="saved"></span>
     </div>
@@ -106,7 +112,7 @@ echo tdm_styles();
     var TOKEN = <?= json_encode(tdm_token()) ?>;
     var CATS = <?= json_encode($cats, JSON_UNESCAPED_UNICODE) ?>;
     var SWAP = <?= json_encode(TDM_SWAP_DIVISIONS) ?>;
-    var WRITE = <?= $canWrite ? 'true' : 'false' ?>;
+    var WRITE = <?= $canWrite && !$started ? 'true' : 'false' ?>;
     var S = null, busy = false, selected = null, dragId = null, pending = {}; // pending[club][cat] = [numéros d'équipes vides]
     var root = document.getElementById('clubs');
 
@@ -188,9 +194,6 @@ echo tdm_styles();
         Object.keys(CATS).forEach(function (cat) { h += '<div><b>' + S.counts[cat] + '</b>' + cat + '</div>'; });
         h += '<div><b class="' + (S.issues ? 'bad' : 'good') + '">' + S.issues + '</b>anomalie(s)</div>';
         document.getElementById('counts').innerHTML = h;
-        document.getElementById('valid').innerHTML = S.validated.length
-            ? '<div class="msg warn"><b>Poules déjà validées</b> pour ' + esc(S.validated.join(', '))
-              + ' : changer une équipe maintenant modifie les équipes IANSEO, il faudrait refaire la validation qualif → poules (ce qui efface les matchs).</div>' : '';
         root.innerHTML = S.clubs.length ? S.clubs.map(card).join('')
             : '<div class="msg warn">Aucun archer dans la compétition : saisissez-les ou importez-les d\'abord.</div>';
         filter();
@@ -324,6 +327,10 @@ echo tdm_styles();
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape') select(null); });
     var all = document.getElementById('autoAll');
     if (all) all.addEventListener('click', function () { post({act: 'auto', club: 0}); });
+    var clear = document.getElementById('clearAll');
+    if (clear) clear.addEventListener('click', function () {
+        if (confirm('Retirer toutes les équipes ?\n\nTous les archers reviennent dans « Non placés » : les équipes sont à recomposer.')) post({act: 'clear'});
+    });
     document.getElementById('q').addEventListener('input', filter);
     document.getElementById('only').addEventListener('change', filter);
     load();

@@ -51,6 +51,16 @@ if ($action !== '') {
                 $err[] = "$code : " . implode(', ', $check['errors']) . '.';
                 continue;
             }
+            // Horaire des poules : facultatif ; date du départ de la catégorie par défaut.
+            $pDate = (string) ($row['pdate'] ?? '');
+            $pTime = substr((string) ($row['ptime'] ?? ''), 0, 5);
+            $pDur = intval($row['pdur'] ?? 0);
+            $t = $t ?? tdm_tournament();
+            $schedErr = tdm_pool_schedule_check($pDate, $pTime, $pDur, $t->ToWhenFrom, $t->ToWhenTo, tdm_pool_rounds($size));
+            if ($schedErr) {
+                $err[] = "$code : " . implode(', ', $schedErr) . '.';
+                continue;
+            }
             $s = $state[$code];
             $changes = $s->Groups !== $groups || $s->Size !== $size;
             if ($changes && ($s->Validated || $s->Scored) && empty($row['force'])) {
@@ -59,6 +69,14 @@ if ($action !== '') {
             }
             $reset = ($s->Validated || $s->Scored) && !empty($row['force']);
             $done = tdm_setup_apply_event($code, $groups, $size, max(0, min(999, intval($row['start'] ?? 0))), $reset);
+            // Réécrit seulement si l'horaire change : un horaire retouché dans IANSEO (pause…) est gardé.
+            $cur = tdm_setup_pool_schedule($code, $size);
+            $empty = $pTime === '';
+            if ($empty ? $cur['time'] !== '' : [$cur['date'], $cur['time'], $cur['dur']] !== [$pDate, $pTime, $pDur]) {
+                tdm_setup_set_pool_schedule($code, $size, $pDate, $pTime, $pDur);
+                $done[] = $empty ? 'horaire des poules effacé'
+                    : "horaire des poules $pTime à " . tdm_pool_end($pTime, $pDur, tdm_pool_rounds($size)) . " ($pDur min par match)";
+            }
             $ok[] = "$code : " . ($done ? implode(', ', $done) : 'déjà en place');
         }
         if ($ok) $flash['ok'] = 'Étape 4 — ' . implode(' ; ', $ok) . '.';
@@ -78,7 +96,9 @@ if ($action !== '') {
             $p = (array) ($_POST['ses'][$n] ?? []);
             $sessions[$n] = ['name' => trim(mb_substr((string) ($p['name'] ?? ''), 0, 50)),
                              'date' => (string) ($p['date'] ?? ''), 'time' => substr((string) ($p['time'] ?? ''), 0, 5),
-                             'targets' => intval($p['targets'] ?? 0)];
+                             'targets' => intval($p['targets'] ?? 0),
+                             'warm' => substr((string) ($p['warm'] ?? ''), 0, 5), 'warmDur' => intval($p['warmDur'] ?? 0),
+                             'dur' => intval($p['dur'] ?? 0)];
         }
         $t = tdm_tournament();
         $counts = tdm_compose(tdm_setup_compose_input(tdm_setup_archers()))['counts'];
@@ -158,6 +178,7 @@ function tdm_check_line($ok, $text)
 #tdm .preview { font-size:12px; }
 #tdm .preview .w { color:var(--orange); display:block; }
 #tdm .preview .e { color:var(--rouge); display:block; }
+#tdm small.w { color:var(--orange); }
 #tdm .state { font-size:12px; }
 #tdm .state .bad { color:var(--orange); }
 #tdm .force { display:block; margin-top:4px; color:var(--rouge); font-size:12px; }
@@ -215,7 +236,10 @@ function tdm_check_line($ok, $text)
             <span class="why">Terminez d'abord l'étape 1.</span>
             <p class="help">Chaque catégorie tire dans un départ (par exemple l'arc classique le matin, les autres catégories
                 l'après-midi). Un départ est une <b>session de qualification IANSEO</b> : le module la crée si besoin, lui donne
-                sa date, son heure (programme IANSEO) et son nombre de cibles, et y place les archers de la catégorie. Chaque départ
+                sa date, son heure (programme IANSEO) et son nombre de cibles, et y place les archers de la catégorie.
+                L'<b>entraînement</b> (heure et durée, facultatif) est l'échauffement de la session dans le programme IANSEO :
+                il s'affiche sur le plan du pas de tir, comme la <b>durée du tir</b> (facultative : durée de la qualification
+                dans le programme IANSEO, fin de la session). Chaque départ
                 réutilise le pas de tir à partir de la cible 1 ; la colonne « Qualif » indique les cibles nécessaires (chaque catégorie sur
                 ses cibles, deux équipes par cible). La saisie des qualifs s'ouvre départ par départ, depuis la page Qualifications.
                 Compétition : <b><?= tdm_h(tdm_date_fr($tour->ToWhenFrom)) ?><?= $tour->ToWhenTo !== $tour->ToWhenFrom ? ' au ' . tdm_h(tdm_date_fr($tour->ToWhenTo)) : '' ?></b>.</p>
@@ -249,9 +273,13 @@ function tdm_check_line($ok, $text)
                     <?php endforeach; ?>
                 </table>
                 <table class="list" style="width:auto">
-                    <tr><th>Départ</th><th>Nom</th><th>Date</th><th>Heure de début</th><th>Cibles</th><th>Qualif</th></tr>
+                    <tr><th>Départ</th><th>Nom</th><th>Date</th>
+                        <th title="Échauffement avant le tir (programme horaire IANSEO), facultatif">Entraînement</th><th>Durée</th>
+                        <th>Début du tir</th>
+                        <th title="Durée de la phase de qualification (programme horaire IANSEO), facultatif">Durée du tir</th>
+                        <th>Cibles</th><th>Qualif</th></tr>
                     <?php for ($n = 1; $n <= TDM_MAX_DEPARTS; $n++):
-                        $s = $qSessions[$n] ?? ['name' => '', 'date' => '', 'time' => ''];
+                        $s = $qSessions[$n] ?? ['name' => '', 'date' => '', 'time' => '', 'warm' => '', 'warmDur' => 0, 'dur' => 0];
                         $p = $depPost['ses'][$n] ?? null; ?>
                     <tr data-dep="<?= $n ?>">
                         <td class="team">Départ <?= $n ?></td>
@@ -259,7 +287,15 @@ function tdm_check_line($ok, $text)
                                    value="<?= tdm_h($p['name'] ?? ($s['name'] ?: TDM_DEPART_NAMES[$n])) ?>"></td>
                         <td><input type="date" name="ses[<?= $n ?>][date]" min="<?= tdm_h($tour->ToWhenFrom) ?>" max="<?= tdm_h($tour->ToWhenTo) ?>"
                                    value="<?= tdm_h($p['date'] ?? ($s['date'] ?: $tour->ToWhenFrom)) ?>"></td>
+                        <td><input type="time" name="ses[<?= $n ?>][warm]" value="<?= tdm_h($p['warm'] ?? $s['warm']) ?>"
+                                   title="Heure de début de l'entraînement (échauffement de la session IANSEO) ; vide = pas d'entraînement"></td>
+                        <td><input type="number" class="small" name="ses[<?= $n ?>][warmDur]" min="0" max="<?= TDM_WARM_MAX ?>"
+                                   title="Durée de l'entraînement en minutes ; saisie seule, l'heure d'entraînement est proposée juste avant le tir"
+                                   value="<?= (int) ($p['warmDur'] ?? $s['warmDur']) ?: '' ?>"> <small>min</small></td>
                         <td><input type="time" name="ses[<?= $n ?>][time]" value="<?= tdm_h($p['time'] ?? $s['time']) ?>"></td>
+                        <td style="white-space:nowrap"><input type="number" class="small" name="ses[<?= $n ?>][dur]" min="0" max="<?= TDM_QUALIF_DUR_MAX ?>"
+                                   title="Durée de la qualification en minutes (programme horaire et fin de session IANSEO) ; vide = non précisée"
+                                   value="<?= (int) ($p['dur'] ?? $s['dur']) ?: '' ?>"> <small>min</small></td>
                         <td><input type="number" class="small" name="ses[<?= $n ?>][targets]" min="1" max="999"
                                    title="Nombre de cibles du pas de tir pour ce départ (session IANSEO)"
                                    value="<?= (int) ($p['targets'] ?? ($s['targets'] ?? 0 ?: (reset($qSessions)['targets'] ?? 24))) ?>"></td>
@@ -329,12 +365,17 @@ function tdm_check_line($ok, $text)
                 le règlement : 4 volées de 4 flèches, barrage à 2 flèches, victoire = 2 points, départage par les
                 points de set. Les poules sont remplies plus tard, à la validation qualif → poules, en serpentin selon la qualif
                 (voir la <a href="<?= tdm_h($TDM_ROOT . 'repartition.php?from=preconfig') ?>">répartition des poules</a>). Cibles : chaque match
-                garde sa cible pendant toute la poule (une équipe en A, l'autre en B) et les poules se suivent.</p>
+                garde sa cible pendant toute la poule (une équipe en A, l'autre en B) et les poules se suivent.
+                <b>Horaire</b> (facultatif) : heure du 1er tour et durée d'un match ; toutes les poules de la catégorie tirent
+                en même temps et les tours s'enchaînent sans pause. Il est écrit dans l'horaire des matchs d'IANSEO
+                (Matchs de Poules → Affectation des cibles), où vous pouvez l'ajuster match par match (une pause par exemple).</p>
             <form method="post" action="<?= tdm_h($TDM_ROOT . 'preconfig.php') ?>" id="f3">
                 <?= tdm_token_field() ?><input type="hidden" name="action" value="events">
                 <table class="list">
                     <tr><th></th><th>Catégorie</th><th class="num">Équipes</th><th>Dans IANSEO</th>
-                        <th>Poules</th><th>Taille</th><th>1re cible</th><th>Aperçu</th></tr>
+                        <th>Poules</th><th>Taille</th><th>1re cible</th><th>Aperçu</th>
+                        <th title="Heure du tour 1 ; les tours suivants s'enchaînent, une durée de match plus tard (horaire des matchs IANSEO)">Début des poules</th>
+                        <th>Durée d'un match<br><small style="font-weight:normal">un tour dure entre 10 et 20 min</small></th></tr>
                     <?php $nextTarget = []; // par départ : chaque départ réutilise le pas de tir à partir de la cible 1
                     foreach (TDM_CATEGORIES as $code => $c):
                         $dep = $depMap[$code] ?? 0;
@@ -373,6 +414,18 @@ function tdm_check_line($ok, $text)
                                     Je confirme : vider les poules et effacer les matchs (validation qualif → poules à refaire)</label>
                             <?php endif; ?>
                         </td>
+                        <?php $sch = $s->Schedule;
+                            $pd = $sch['date'] ?: (($qSessions[$dep]['date'] ?? '') ?: $tour->ToWhenFrom); ?>
+                        <td style="white-space:nowrap">
+                            <?php if ($tour->ToWhenTo !== $tour->ToWhenFrom): ?>
+                                <input type="date" name="ev[<?= $code ?>][pdate]" min="<?= tdm_h($tour->ToWhenFrom) ?>" max="<?= tdm_h($tour->ToWhenTo) ?>" value="<?= tdm_h($pd) ?>">
+                            <?php else: ?><input type="hidden" name="ev[<?= $code ?>][pdate]" value="<?= tdm_h($pd) ?>"><?php endif; ?>
+                            <input type="time" name="ev[<?= $code ?>][ptime]" value="<?= tdm_h($sch['time']) ?>"
+                                   title="Heure du tour 1 ; vide = pas d'horaire. Les tours suivants s'enchaînent sans pause.">
+                            <?php if ($sch['custom']): ?><br><small class="w" title="Les tours ne s'enchaînent pas à la suite : horaire modifié dans IANSEO (Affectation des cibles). Il est gardé tant que vous ne changez pas l'heure ou la durée ici.">horaire personnalisé dans IANSEO</small><?php endif; ?>
+                        </td>
+                        <td style="white-space:nowrap"><input type="number" class="small" min="1" max="<?= TDM_MATCH_MAX ?>" name="ev[<?= $code ?>][pdur]"
+                                   value="<?= $sch['dur'] ?: TDM_MATCH_DEFAULT ?>" title="Durée d'un match en minutes (un tour dure entre 10 et 20 min)"> <small>min</small></td>
                     </tr>
                     <?php endforeach; ?>
                 </table>
@@ -411,6 +464,20 @@ function tdm_check_line($ok, $text)
             tr.querySelector('.need').innerHTML = n ? (n > have ? '<b style="color:var(--rouge)">' + n + ' cibles nécessaires</b>' : n + ' cible(s) nécessaire(s)') : '—';
         });
     }
+    // Entraînement : durée saisie sans heure → heure proposée juste avant le tir (suivie tant qu'elle n'est pas modifiée).
+    f.querySelectorAll('tr[data-dep]').forEach(function (tr) {
+        var warm = tr.querySelector('input[name$="[warm]"]'), dur = tr.querySelector('input[name$="[warmDur]"]'),
+            time = tr.querySelector('input[name$="[time]"]');
+        if (!warm.value) warm.dataset.auto = '1';
+        warm.addEventListener('input', function () { warm.dataset.auto = warm.value ? '' : '1'; });
+        function propose() {
+            var d = +dur.value || 0, m = /^(\d\d):(\d\d)/.exec(time.value);
+            if (!warm.dataset.auto || !d || !m) return;
+            var t = +m[1] * 60 + +m[2] - d;
+            if (t >= 0) warm.value = String(Math.floor(t / 60)).padStart(2, '0') + ':' + String(t % 60).padStart(2, '0');
+        }
+        dur.addEventListener('input', propose); time.addEventListener('input', propose);
+    });
     f.addEventListener('change', upd); f.addEventListener('input', upd); upd();
 })();
 </script>
@@ -421,6 +488,8 @@ function tdm_check_line($ok, $text)
     document.querySelectorAll('#f3 tr[data-teams]').forEach(function (tr) {
         var g = tr.querySelector('input[name$="[groups]"]'), z = tr.querySelector('input[name$="[size]"]'), t = tr.querySelector('input[name$="[start]"]');
         var out = tr.querySelector('.p'), force = tr.querySelector('.force'), on = tr.querySelector('input[name$="[on]"]');
+        var pt = tr.querySelector('input[name$="[ptime]"]'), pd = tr.querySelector('input[name$="[pdur]"]'),
+            pdt = tr.querySelector('input[type="date"][name$="[pdate]"]');
         function upd() {
             var n = +tr.dataset.teams, gv = parseInt(g.value, 10) || 0, zv = parseInt(z.value, 10) || 0, h = '';
             if (gv < 1 || zv < MIN || zv > MAX) {
@@ -434,11 +503,20 @@ function tdm_check_line($ok, $text)
                 else if (n > 0 && places - n >= zv) h += '<span class="w">au moins une poule vide</span>';
                 else if (places > n) h += '<span class="w">' + (places - n) + ' bye(s) 5-0</span>';
                 if (zv % 2) h += '<span class="w">taille impaire : une équipe au repos par tour</span>';
+                // Horaire : les tours s'enchaînent sans pause.
+                var m = /^(\d\d):(\d\d)/.exec(pt.value), d = parseInt(pd.value, 10) || 0;
+                if (m && d > 0) {
+                    var end = +m[1] * 60 + +m[2] + (Math.ceil(zv / 2) * 2 - 1) * d;
+                    h += '<span style="display:block">poules ' + pt.value + ' → ' + (end >= 1440 ? '<span class="e">après minuit</span>'
+                        : String(Math.floor(end / 60)).padStart(2, '0') + ':' + String(end % 60).padStart(2, '0')) + '</span>';
+                } else if (pt.value) {
+                    h += '<span class="e">durée d\'un match manquante</span>';
+                }
             }
             out.innerHTML = h;
             if (force) force.hidden = !on.checked;
         }
-        [g, z, t].forEach(function (i) { i.addEventListener('input', function () { on.checked = true; upd(); }); });
+        [g, z, t, pt, pd, pdt].forEach(function (i) { if (i) i.addEventListener('input', function () { on.checked = true; upd(); }); });
         on.addEventListener('change', upd);
         upd();
     });

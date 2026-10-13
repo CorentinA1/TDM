@@ -268,6 +268,7 @@ echo tdm_styles();
     <?php foreach ($plan as $ses => $sesPlan): ?>
     <div class="card">
         <h3>Plan des cibles<?= $depMap ? ' — ' . tdm_h($depLabel($ses)) : '' ?></h3>
+        <?php if ($sched = tdm_depart_schedule($sessions[$ses] ?? [])): ?><p class="help">🕘 <?= tdm_h($sched) ?></p><?php endif; ?>
         <div class="plan">
             <?php foreach ($sesPlan as $target => $slots):
                 $bad = count($slots['A'] ?? []) > 1 || count($slots['B'] ?? []) > 1; ?>

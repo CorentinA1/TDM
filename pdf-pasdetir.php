@@ -232,6 +232,12 @@ foreach ($groups as $ses => $codes) {
 
     $pdf->SetFont($pdf->FontStd, 'B', 14);
     $pdf->Cell($W, 8, 'Plan du pas de tir' . ($depTitle ? ' — ' . $depTitle : ''), 0, 1, 'C');
+    // Horaire du départ : entraînement (échauffement de la session IANSEO) et début du tir.
+    $sched = tdm_depart_schedule($sessions[$ses ?: (array_key_first($sessions) ?? 0)] ?? []);
+    if ($sched) {
+        $pdf->SetFont($pdf->FontStd, '', 10);
+        $pdf->Cell($W, 6, $sched, 0, 1, 'C');
+    }
     $pdf->Ln(2);
 
     // En-tête : numéros de cibles.

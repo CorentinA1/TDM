@@ -6,8 +6,10 @@
  *   POST act=place  id, cat, sub         archer déposé dans une équipe
  *   POST act=remove id                   archer remis dans les non placés
  *   POST act=auto   club                 « Composer automatiquement » un club
+ *   POST act=clear                       « Retirer toutes les équipes » : tous les archers non placés
  *
  * Chaque écriture est enregistrée tout de suite et renvoie l'état à jour.
+ * Bloqué dès que la compétition a commencé (tdm_setup_started()) : aucune écriture.
  */
 require_once __DIR__ . '/lib/boot.php';
 require_once __DIR__ . '/lib/setup.php';
@@ -30,6 +32,9 @@ if (!hash_equals(tdm_token(), (string) ($_POST['tdm_token'] ?? ''))) {
 if (!hasFullACL(AclParticipants, '', AclReadWrite) || IsBlocked(BIT_BLOCK_PARTICIPANT)) {
     tdm_json(['error' => 'Droits insuffisants ou liste des participants verrouillée.']);
 }
+if ($started = tdm_setup_started_message(tdm_setup_started())) {
+    tdm_json(['error' => $started, 'state' => tdm_setup_composition_state()]);
+}
 
 $archers = tdm_setup_archers();
 $input = tdm_setup_place_input($archers);
@@ -49,6 +54,8 @@ if ($act === 'place') {
     $club = intval($_POST['club'] ?? 0);
     $clubs = $club ? [$club] : array_unique(array_column($input, 'club'));
     foreach ($clubs as $c) $changes += tdm_auto_changes($input, $c);
+} elseif ($act === 'clear') {
+    $changes = tdm_remove_all_changes($input);
 } else {
     $error = 'action inconnue';
 }
@@ -60,4 +67,5 @@ if ($error !== null) {
 $n = $changes ? tdm_setup_save_composition($changes, $archers) : 0;
 $msg = $act === 'auto' ? ($n ? (count($changes) / 2) . ' équipe(s) formée(s).' : 'Rien à composer automatiquement : '
     . 'il faut au moins une femme et un homme non placés dans une même catégorie.') : '';
+if ($act === 'clear') $msg = $changes ? count($changes) . ' archer(s) remis dans « Non placés ».' : 'Aucune équipe à retirer.';
 tdm_json(['ok' => true, 'msg' => $msg, 'state' => tdm_setup_composition_state()]);

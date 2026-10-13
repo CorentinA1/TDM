@@ -69,7 +69,7 @@ echo tdm_styles();
         </div>
     </div>
     <?php else: ?>
-        <div class="msg warn">Aucune épreuve TDM : faites d'abord la configuration.</div>
+        <div class="msg warn">Aucune épreuve TDM : faites d'abord la configuration à l'<a href="<?= tdm_h($TDM_ROOT . 'preconfig.php#step4') ?>">étape 4</a>.</div>
     <?php endif; ?>
 
     <?php foreach ($events as $code => $ev):

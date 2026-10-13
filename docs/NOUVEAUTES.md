@@ -1,5 +1,25 @@
 # Nouveautés de chaque version
 
+## 1.1.0
+
+**Horaires, liés au programme horaire d'IANSEO** (aucune valeur gardée à part) :
+- **Configuration, étape 2** : pour chaque départ, l'**entraînement** (heure et durée) et la **durée du tir**, en plus
+  de l'heure de début. Ce sont l'échauffement, la durée de la qualification et la fin de la session dans IANSEO.
+  Contrôles : l'entraînement commence avant le tir ; alerte si un tir déborde sur le départ suivant.
+- **Plan du pas de tir** (écran et PDF) : « Entraînement 08:30 (30 min) · Tir 09:00 à 11:00 ».
+- **Configuration, étape 4** : **horaire des poules** par catégorie, avec l'heure du 1er tour et la durée d'un match
+  (15 min proposées ; un tour dure entre 10 et 20 min). Toutes les poules tirent en même temps, les tours
+  s'enchaînent sans pause, l'aperçu donne l'heure de fin. Il est écrit dans l'horaire des matchs d'IANSEO
+  (Affectation des cibles) ; un horaire ajusté à la main dans IANSEO (une pause par exemple) est gardé.
+
+**Composition des équipes :**
+- bouton **« Retirer toutes les équipes »** : tous les archers reviennent dans « Non placés » ;
+- **équipes bloquées dès que la compétition a commencé** (score de qualification, poules validées ou match saisi) :
+  plus de glisser-déposer, de composition automatique ni de retrait. En cas de vraie erreur, effacer d'abord les
+  scores dans IANSEO.
+
+**Interface :** sur les pages Répartition et Résultats, « Aucune épreuve TDM » renvoie à l'étape 4 de la configuration.
+
 ## 1.0.4
 
 **Nouvelle page Greffe** (étape 3, entre Équipes et Qualifications), pour l'accueil des archers et le concours :

@@ -155,6 +155,64 @@ function tdm_pool_suggest($teams)
     return [$groups, $size];
 }
 
+/** Durée maximale d'un match de poule (minutes). */
+const TDM_MATCH_MAX = 120;
+/** Durée proposée d'un match de poule (un tour dure entre 10 et 20 minutes). */
+const TDM_MATCH_DEFAULT = 15;
+
+/** Nombre de tours d'une poule (comme IANSEO : une équipe au repos par tour si la taille est impaire). */
+function tdm_pool_rounds($size)
+{
+    return (int) ceil($size / 2) * 2 - 1;
+}
+
+/**
+ * Heure de chaque tour : les tours s'enchaînent, durée d'un match après le
+ * précédent, sans pause. Fonction pure.
+ *
+ * @return array<int, string> tour => « HH:MM » (vide sans heure de début ou sans durée)
+ */
+function tdm_pool_times($start, $dur, $rounds)
+{
+    if (!preg_match('/^([01]\d|2[0-3]):([0-5]\d)$/', (string) $start, $m) || $dur < 1) return [];
+    $out = [];
+    for ($r = 1; $r <= $rounds; $r++) {
+        $t = (int) $m[1] * 60 + (int) $m[2] + ($r - 1) * $dur;
+        $out[$r] = sprintf('%02d:%02d', intdiv($t, 60) % 24, $t % 60);
+    }
+    return $out;
+}
+
+/** Heure de fin du dernier tour (« HH:MM », vide sans horaire). Fonction pure. */
+function tdm_pool_end($start, $dur, $rounds)
+{
+    $times = tdm_pool_times($start, $dur, $rounds + 1);
+    return $times[$rounds + 1] ?? '';
+}
+
+/**
+ * Contrôle de l'horaire des poules d'une catégorie. Fonction pure.
+ * Sans heure de début : pas d'horaire (la durée seule, proposée par défaut, est ignorée).
+ *
+ * @return string[] erreurs
+ */
+function tdm_pool_schedule_check($date, $time, $dur, $from, $to, $rounds)
+{
+    if ($time === '') return [];
+    $errors = [];
+    if (!preg_match('/^([01]\d|2[0-3]):[0-5]\d$/', $time)) $errors[] = 'heure de début des poules manquante';
+    if ($dur < 1 || $dur > TDM_MATCH_MAX) $errors[] = 'durée d\'un match entre 1 et ' . TDM_MATCH_MAX . ' minutes';
+    if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $date) || $date < $from || $date > $to) $errors[] = 'date des poules en dehors de la compétition';
+    if (!$errors && tdm_minutes($time) + $rounds * $dur > 24 * 60) $errors[] = 'les poules finiraient après minuit';
+    return $errors;
+}
+
+/** « 09:30 » → 570. */
+function tdm_minutes($hhmm)
+{
+    return preg_match('/^(\d{1,2}):(\d{2})/', (string) $hhmm, $m) ? (int) $m[1] * 60 + (int) $m[2] : 0;
+}
+
 /** Divisions interchangeables par glisser-déposer : un classique devient néo-licencié et inversement. */
 const TDM_SWAP_DIVISIONS = ['CL', 'NE'];
 
@@ -205,6 +263,60 @@ function tdm_remove_changes(array $archers, $id)
 {
     if (!isset($archers[$id])) return [];
     return [$id => ['div' => $archers[$id]['div'], 'mix' => 0, 'sub' => 0]];
+}
+
+/**
+ * « Retirer toutes les équipes » : chaque archer d'une catégorie TDM engagé en
+ * équipe mixte revient dans les non placés, avec sa division. Fonction pure.
+ *
+ * @param array $archers EnId => [club, sex, div, cls, mix, sub, status] (tdm_setup_place_input()).
+ * @return array<int, array{div: string, mix: int, sub: int}>
+ */
+function tdm_remove_all_changes(array $archers)
+{
+    $changes = [];
+    foreach ($archers as $id => $a) {
+        if (empty($a['mix']) || tdm_category_of_div($a['div']) === null) continue;
+        $changes[$id] = ['div' => $a['div'], 'mix' => 0, 'sub' => 0];
+    }
+    return $changes;
+}
+
+/**
+ * La compétition a-t-elle commencé ? Raisons qui bloquent la composition des
+ * équipes (vide : rien ne bloque). Blocage global, sans voie de sortie dans le
+ * module (décision de l'organisateur) : effacer d'abord les scores dans IANSEO.
+ *
+ * @return string[]
+ */
+function tdm_setup_started()
+{
+    global $TDM_TOUR;
+    $tour = StrSafe_DB($TDM_TOUR);
+    $why = [];
+    $divs = [];
+    foreach (TDM_CATEGORIES as $code => $c) $divs[$c['div']] = $code;
+    $cats = [];
+    $rs = safe_r_sql("SELECT DISTINCT EnDivision FROM Entries INNER JOIN Qualifications ON QuId = EnId
+        WHERE EnTournament = $tour AND EnAthlete = 1 AND (QuScore > 0 OR QuGold > 0 OR QuXnine > 0 OR QuHits > 0)");
+    while ($r = safe_fetch($rs)) if (isset($divs[$r->EnDivision])) $cats[] = $divs[$r->EnDivision];
+    if ($cats) $why[] = 'scores de qualification saisis (' . implode(', ', $cats) . ')';
+    $cats = [];
+    foreach (tdm_events() as $code => $e) if ($e->Validated) $cats[] = $code;
+    if ($cats) $why[] = 'poules validées (' . implode(', ', $cats) . ')';
+    $rs = safe_r_sql("SELECT DISTINCT RrMatchEvent FROM RoundRobinMatches WHERE RrMatchTournament = $tour AND RrMatchTeam = 1
+        AND (RrMatchScore > 0 OR RrMatchSetScore > 0) ORDER BY RrMatchEvent");
+    $cats = [];
+    while ($r = safe_fetch($rs)) $cats[] = $r->RrMatchEvent;
+    if ($cats) $why[] = 'matchs de poule saisis (' . implode(', ', $cats) . ')';
+    return $why;
+}
+
+/** Message bloquant de la composition des équipes (vide : rien ne bloque). */
+function tdm_setup_started_message(array $why)
+{
+    return $why ? 'La compétition a commencé (' . implode(' ; ', $why) . ') : les équipes ne peuvent plus être modifiées. '
+        . 'En cas de vraie erreur, effacez d\'abord les scores dans IANSEO.' : '';
 }
 
 /**
@@ -775,6 +887,7 @@ function tdm_setup_events()
             $s->Targets = $m && $m->First !== null && (int) $m->Missing === 0;
             $s->FirstTarget = $s->Targets ? (int) $m->First : 0;
         }
+        $s->Schedule = $s->Groups ? tdm_setup_pool_schedule($code, $s->Size) : ['date' => '', 'time' => '', 'dur' => 0, 'custom' => false];
         if (!$s->Exists) $s->Problems[] = 'épreuve à créer';
         else {
             if (!$s->RoundRobin) $s->Problems[] = 'pas en Round Robin à un niveau';
@@ -791,6 +904,58 @@ function tdm_setup_events()
         $out[$code] = $s;
     }
     return $out;
+}
+
+/**
+ * Horaire des poules d'une catégorie, lu dans les matchs IANSEO (Modules/RoundRobin/Targets.php :
+ * date, heure et durée de chaque match) : date, heure et durée du tour 1. « custom » : les
+ * tours ne s'enchaînent pas à la suite (horaire retouché dans IANSEO, une pause par exemple).
+ *
+ * @return array{date: string, time: string, dur: int, custom: bool}
+ */
+function tdm_setup_pool_schedule($code, $size)
+{
+    global $TDM_TOUR;
+    $out = ['date' => '', 'time' => '', 'dur' => 0, 'custom' => false];
+    $rs = safe_r_sql("SELECT RrMatchRound, MIN(RrMatchScheduledDate) AS D, MIN(RrMatchScheduledTime) AS T,
+            MAX(RrMatchScheduledTime) AS T2, MIN(RrMatchScheduledLength) AS L, MAX(RrMatchScheduledLength) AS L2
+        FROM RoundRobinMatches WHERE RrMatchTournament = " . StrSafe_DB($TDM_TOUR) . " AND RrMatchTeam = 1
+          AND RrMatchEvent = " . StrSafe_DB($code) . " AND RrMatchLevel = 1
+        GROUP BY RrMatchRound ORDER BY RrMatchRound");
+    $rounds = [];
+    while ($r = safe_fetch($rs)) $rounds[(int) $r->RrMatchRound] = $r;
+    $first = $rounds[1] ?? null;
+    if (!$first || !$first->T || $first->T === '00:00:00') return $out;
+    $out = ['date' => $first->D && $first->D !== '0000-00-00' ? (string) $first->D : '', 'time' => substr($first->T, 0, 5),
+            'dur' => (int) $first->L, 'custom' => false];
+    $expected = tdm_pool_times($out['time'], $out['dur'], tdm_pool_rounds($size));
+    foreach ($rounds as $n => $r) {
+        if (substr((string) $r->T, 0, 5) !== ($expected[$n] ?? '') || $r->T !== $r->T2 || $r->L !== $r->L2 || (int) $r->L !== $out['dur']) {
+            $out['custom'] = true;
+        }
+    }
+    return $out;
+}
+
+/**
+ * Enregistre l'horaire des poules d'une catégorie dans les matchs IANSEO (mêmes champs que
+ * Modules/RoundRobin/Targets.php) : toutes les poules en même temps, les tours à la suite,
+ * sans pause. Heure vide : horaire effacé.
+ */
+function tdm_setup_set_pool_schedule($code, $size, $date, $time, $dur)
+{
+    global $TDM_TOUR;
+    $where = "RrMatchTournament = " . StrSafe_DB($TDM_TOUR) . " AND RrMatchTeam = 1 AND RrMatchEvent = " . StrSafe_DB($code)
+        . " AND RrMatchLevel = 1";
+    $times = tdm_pool_times($time, $dur, tdm_pool_rounds($size));
+    if (!$times) {
+        safe_w_sql("UPDATE RoundRobinMatches SET RrMatchScheduledDate = 0, RrMatchScheduledTime = 0, RrMatchScheduledLength = 0 WHERE $where");
+        return;
+    }
+    foreach ($times as $round => $t) {
+        safe_w_sql("UPDATE RoundRobinMatches SET RrMatchScheduledDate = " . StrSafe_DB($date) . ", RrMatchScheduledTime = " . StrSafe_DB("$t:00") . ",
+            RrMatchScheduledLength = " . intval($dur) . " WHERE $where AND RrMatchRound = " . intval($round));
+    }
 }
 
 /**
