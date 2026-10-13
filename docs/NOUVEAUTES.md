@@ -1,5 +1,10 @@
 # Nouveautés de chaque version
 
+## 1.3.3
+
+- **Mise à jour du module** : seules les nouveautés de la version disponible s'affichent, avec un lien
+  « Toutes les nouveautés » vers cette page.
+
 ## 1.3.2
 
 - **Configuration** : encadré « Mode d'emploi » en tête de page, avec un lien vers l'[utilisation pas à pas](UTILISATION.md).
