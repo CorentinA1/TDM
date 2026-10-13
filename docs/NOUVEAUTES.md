@@ -1,5 +1,28 @@
 # Nouveautés de chaque version
 
+## 1.2.0
+
+**Qualifications avec Scorekeeper**, au choix pour chaque départ (Configuration, étape 2, colonne « Saisie des scores ») :
+- **QR code de la cible** en bas de la feuille de marque d'équipe (une page par cible, un seul QR) et sur une planche
+  « 📱 QR codes Scorekeeper » par catégorie. C'est le QR des feuilles natives d'IANSEO : le téléphone ouvre la cible
+  et affiche ses archers (A-B pour la première équipe, C-D pour la seconde).
+- La feuille d'équipe reste devant les archers et **fait foi**. Les totaux d'équipe, les 10 et les 9 se mettent à
+  jour en direct sur la page Qualifications, avec l'avancement (« 12 / 20 flèches »).
+- **Téléphone en panne** : « ✍ Saisir à la main » sur l'équipe ; Scorekeeper n'envoie alors plus rien pour ses
+  archers. « ↩ Rendre à Scorekeeper » annule.
+- **Ouverture du départ** refusée tant que Scorekeeper n'est pas prêt : configuration, **adresse du serveur**
+  (Compétition › Informations principales), cibles, blasons. **Fermer la saisie** verrouille aussi la session dans
+  Scorekeeper.
+- **Feuilles complétées**, à imprimer si les archers les demandent : feuille d'équipe reconstruite à partir des
+  flèches des deux archers (2 flèches de la femme puis 2 de l'homme à chaque volée), et feuilles natives remplies.
+
+**Configuration :**
+- **une seule distance par départ** (étape 1) : chaque départ, le matin comme l'après-midi, est une session IANSEO
+  avec seulement la mini-qualif. Sur une compétition existante, cliquer « Enregistrer l'étape 1 ».
+
+**Feuilles de marque d'équipe :** une page par cible (équipe A à gauche, B à droite), en mode papier comme en
+Scorekeeper.
+
 ## 1.1.0
 
 **Horaires, liés au programme horaire d'IANSEO** (aucune valeur gardée à part) :

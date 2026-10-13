@@ -508,6 +508,11 @@ function tdm_setup_step1()
     $checks[] = [(bool) $face, 'Blason des néo-licenciés'
         . ($face ? " : {$face->TfName}" : ' (60 cm, une flèche par zone)')];
 
+    // Une seule distance : chaque départ (session) n'a que la mini-qualif ; le « Salle 18 m » en prévoit deux.
+    $nd = tdm_setup_num_dist();
+    $checks[] = [$nd === 1, 'Une seule distance par départ (mini-qualif)'
+        . ($nd !== 1 ? " — la compétition en a $nd (Salle 18 m : 2 × 18 m)" : '')];
+
     $ok = !$blocking && !in_array(false, array_column($checks, 0), true);
     return ['ok' => $ok, 'blocking' => $blocking, 'checks' => $checks];
 }
@@ -591,7 +596,33 @@ function tdm_setup_step1_apply()
     }
     // Archers déjà en NE : blason recalculé.
     tdm_setup_fix_faces("EnDivision = " . StrSafe_DB(TDM_NE_DIVISION));
+
+    // Une seule distance (mini-qualif) : comme Compétition › Paramètres avancés › Nombre de distances
+    // (Tournament/ManageAdvancedParams.php) : programme des distances 2 et suivantes supprimé dans chaque
+    // session, noms de ces distances vidés. Jamais si des flèches sont déjà saisies au-delà de la distance 1.
+    if (tdm_setup_num_dist() > 1) {
+        $rs = safe_r_sql("SELECT COUNT(*) AS N FROM Qualifications INNER JOIN Entries ON EnId = QuId
+            WHERE EnTournament = $tour AND (QuD2Hits > 0 OR QuD3Hits > 0 OR QuD4Hits > 0)");
+        if ((int) safe_fetch($rs)->N) {
+            $done[] = 'nombre de distances NON modifié : des scores sont saisis sur la distance 2';
+        } else {
+            safe_w_sql("DELETE FROM DistanceInformation WHERE DiTournament = $tour AND DiDistance > 1");
+            $set = [];
+            for ($n = 2; $n <= 8; $n++) $set[] = "Td$n = ''";
+            safe_w_sql("UPDATE TournamentDistances SET " . implode(', ', $set) . " WHERE TdTournament = $tour");
+            safe_w_sql("UPDATE Tournament SET ToNumDist = 1 WHERE ToId = $tour");
+            $done[] = 'une seule distance par départ (distance 2 du Salle 18 m retirée)';
+        }
+    }
     return $done;
+}
+
+/** Nombre de distances de la compétition (Tournament.ToNumDist). */
+function tdm_setup_num_dist()
+{
+    global $TDM_TOUR;
+    $r = safe_fetch(safe_r_sql("SELECT ToNumDist FROM Tournament WHERE ToId = " . StrSafe_DB($TDM_TOUR)));
+    return $r ? (int) $r->ToNumDist : 0;
 }
 
 /** Blason qui s'applique à la division NE (même règle qu'IANSEO : LIKE ou expression régulière), ou null. */

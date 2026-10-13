@@ -28,6 +28,9 @@ $openDep = tdm_open_depart();
 /** Le départ de cette catégorie est-il ouvert à la saisie ? (sans départs : toujours) */
 // Une catégorie sans départ reste toujours saisissable (configuration partielle).
 $isOpen = fn($code) => !$depMap || !isset($depMap[$code]) || ($depMap[$code] === $openDep && $openDep > 0);
+/** Catégorie saisie avec Scorekeeper (mode de son départ, configuration étape 2) ? */
+$qModes = tdm_qualif_modes();
+$isIsk = fn($code) => $depMap && isset($depMap[$code]) && ($qModes[$depMap[$code]] ?? 'paper') === 'isk';
 
 if (($_POST['action'] ?? '') === 'open') {
     tdm_check_token();
@@ -37,7 +40,15 @@ if (($_POST['action'] ?? '') === 'open') {
     }
     $n = intval($_POST['dep'] ?? 0);
     if ($n && !in_array($n, $usedDeps, true)) exit('Départ inconnu.');
+    // Départ en Scorekeeper : tout doit être prêt pour les téléphones (cibles, blasons, API).
+    if ($n && tdm_qualif_mode($n) === 'isk' && ($problems = tdm_isk_open_problems($n))) {
+        tdm_flash(['err' => 'Saisie non ouverte (' . tdm_depart_label($n, $departs[$n] ?? []) . ', Scorekeeper) : ' . implode(' ; ', $problems) . '.']);
+        header('Location: ' . $TDM_ROOT . 'qualif.php?dep=' . $n);
+        exit;
+    }
     tdm_set_open_depart($n);
+    // Verrous Scorekeeper : seul le départ ouvert en mode Scorekeeper reçoit les téléphones.
+    tdm_isk_sync_locks();
     tdm_flash(['ok' => $n ? 'Saisie ouverte pour le ' . tdm_depart_label($n, $departs[$n] ?? []) . '.' : 'Saisie des qualifications fermée pour tous les départs.']);
     header('Location: ' . $TDM_ROOT . 'qualif.php?dep=' . $n);
     exit;
@@ -97,8 +108,30 @@ if (($_POST['action'] ?? '') === 'save') {
     }
 
     $teams = tdm_event_teams($events[$postedEv]);
-    $parsed = [];
+    $isk = $isIsk($postedEv);
+    $manual = $isk ? tdm_isk_manual_get($postedEv) : [];
+
+    // Scorekeeper : « Rendre à Scorekeeper » une équipe reprise à la main.
+    $release = (string) ($_POST['release'] ?? '');
+    if ($isk && $release !== '' && isset($teams[$release]) && in_array($release, $manual, true)) {
+        if (tdm_release_team($teams[$release])) tdm_rebuild_teams([$teams[$release]]);
+        tdm_isk_manual_set($postedEv, array_diff($manual, [$release]));
+        tdm_flash(['ev' => $postedEv, 'ok' => "{$teams[$release]->Name} : rendue à Scorekeeper. Score effacé ; "
+            . 'le téléphone de la cible peut de nouveau envoyer les flèches de ses archers.']);
+        header('Location: ' . $back);
+        exit;
+    }
+
+    // Scorekeeper : seules les équipes reprises à la main se saisissent ici (case « m » cochée
+    // par « Saisir à la main »), les autres viennent des téléphones.
+    $todo = [];
     foreach ($teams as $key => $t) {
+        if (!$isk || in_array($key, $manual, true) || (($_POST['m'][$key] ?? '') === '1' && trim((string) ($_POST['s'][$key] ?? '')) !== '')) {
+            $todo[$key] = $t;
+        }
+    }
+    $parsed = [];
+    foreach ($todo as $key => $t) {
         $q = tdm_parse_qualif($_POST['s'][$key] ?? '', $_POST['t'][$key] ?? '', $_POST['n'][$key] ?? '');
         if (!$q['ok']) $errors[$key] = $q['error'];
         $parsed[$key] = $q;
@@ -106,9 +139,10 @@ if (($_POST['action'] ?? '') === 'save') {
 
     if (!$errors) {
         $changed = [];
-        foreach ($teams as $key => $t) {
-            if (tdm_store_team_score($t, $parsed[$key])) $changed[] = $t;
+        foreach ($todo as $key => $t) {
+            if (tdm_store_team_score($t, $parsed[$key], $isk)) $changed[] = $t;
         }
+        if ($isk) tdm_isk_manual_set($postedEv, array_merge($manual, array_keys($todo)));
         if ($changed) tdm_rebuild_teams($changed);
         $n = count($changed);
         $msg = $n
@@ -155,11 +189,19 @@ echo tdm_styles();
 #tdm button.validate:disabled { opacity:.45; cursor:default; }
 #tdm td.toss { white-space:nowrap; font-size:12px; }
 #tdm td.toss .todo { color:var(--rouge); font-weight:700; margin-left:6px; }
+#tdm .dep a.pending { color:var(--orange); font-size:12px; font-weight:600; }
+#tdm td.isk { white-space:nowrap; font-size:12px; }
+#tdm td.isk .prog { color:#7d8183; }
+#tdm td.isk .prog.done { color:var(--vert); font-weight:600; }
+#tdm .badge-manual { display:inline-block; font-size:11px; font-weight:700; color:#fff; background:var(--orange); border-radius:4px; padding:0 6px; margin-left:4px; }
+#tdm button.mini { background:#fff; border:1px solid var(--bleu); color:var(--bleu); border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; cursor:pointer; }
+#tdm button.mini.back { border-color:var(--orange); color:var(--orange); }
 </style>
 <div id="tdm">
     <?= tdm_header('qualif', 'Saisit la qualification par équipe, départ par départ.', [
         '<b>Attribution des cibles</b>, puis impression du plan du pas de tir et des feuilles de marque.',
-        '<b>Ouvrez la saisie</b> du départ, puis saisissez le score de chaque équipe (5 volées de 4 flèches) et ses 10 et 9 pour le départage.',
+        '<b>Ouvrez la saisie</b> du départ, puis saisissez le score de chaque équipe (5 volées de 4 flèches) et ses 10 et 9 pour le départage. '
+            . 'Départ en <b>Scorekeeper</b> : les téléphones envoient les flèches de chaque archer, les totaux d\'équipe se mettent à jour ici.',
         'Égalité parfaite (même score, mêmes 10 et 9) : <b>pile ou face</b>, cochez le vainqueur.',
         'Contrôlez la <b>répartition des poules</b>, puis <b>✅ Valider vers les poules</b>.',
     ], 'Une case vide retire l\'équipe du classement.') ?>
@@ -186,7 +228,12 @@ echo tdm_styles();
                     <b><?= tdm_h(tdm_depart_label($n, $departs[$n] ?? [])) ?></b>
                     <span><?= tdm_h(implode(', ', $cats)) ?></span>
                     <em><?= $open ? '🟢 saisie ouverte' : '🔒 saisie fermée' ?></em>
+                    <span><?= ($qModes[$n] ?? 'paper') === 'isk' ? '📱 Scorekeeper' : '📝 Feuille papier' ?></span>
                 </a>
+                <?php if (($qModes[$n] ?? 'paper') === 'isk' && ($pending = tdm_isk_pending($n))): ?>
+                    <a class="pending" href="<?= tdm_h($CFG->ROOT_DIR . 'Api/ISK-NG/Results.php') ?>"
+                       title="Volées reçues des téléphones, pas encore importées dans IANSEO (import manuel)">⏳ <?= $pending ?> volée(s) à importer</a>
+                <?php endif; ?>
                 <?php if ($canWrite): ?>
                 <form method="post" action="<?= tdm_h($TDM_ROOT . 'qualif.php') ?>">
                     <?= tdm_token_field() ?><input type="hidden" name="action" value="open">
@@ -251,6 +298,10 @@ echo tdm_styles();
         $isPosted = $posted !== null && $postedEv === $code;
         // Validation qualif → poules depuis cette page : classement complet, sans égalité à trancher.
         $canValidate = hasFullACL(AclRobin, '', AclReadWrite) && $ev->Pools > 0;
+        // Scorekeeper : scores reçus des téléphones, saisie ici seulement pour les équipes reprises à la main.
+        $isk = $isIsk($code);
+        $manual = $isk ? tdm_isk_manual_get($code) : [];
+        $tgts = array_filter(array_map(fn($x) => (int) $x[0], $targets));
         $whyNot = !$scored ? 'aucun score saisi' : ($rk['open'] ? 'pile ou face à faire' : '');
     ?>
     <div class="card" id="ev-<?= tdm_h($code) ?>">
@@ -268,6 +319,14 @@ echo tdm_styles();
         <div>
             <div class="shortcuts">
                 <a href="<?= tdm_h($TDM_ROOT . 'pdf-qualif.php?ev=' . rawurlencode($code)) ?>" target="_blank" title="Une feuille par équipe : 5 volées de 4 flèches, total, nombre de 10 et de 9">🖨 Feuilles de marque</a>
+                <?php if ($isk): ?>
+                <a href="<?= tdm_h($TDM_ROOT . 'pdf-qrcodes.php?ev=' . rawurlencode($code)) ?>" target="_blank"
+                   title="Une case par cible : ses deux équipes et le QR code Scorekeeper de la cible (un téléphone par cible)">📱 QR codes Scorekeeper</a>
+                <a href="<?= tdm_h($TDM_ROOT . 'pdf-qualif.php?filled=1&ev=' . rawurlencode($code)) ?>" target="_blank"
+                   title="Feuilles d'équipe remplies avec les flèches reçues de Scorekeeper (à chaque volée : 2 flèches de la femme, puis 2 de l'homme)">🖨 Feuilles complétées — équipes</a>
+                <a href="<?= tdm_h(tdm_native_filled_scorecards_url($depMap[$code], $tgts ? min($tgts) : 1, $tgts ? max($tgts) : 999)) ?>" target="_blank"
+                   title="Feuilles de marque natives d'IANSEO remplies : une carte par archer">🖨 Feuilles complétées — archers (IANSEO)</a>
+                <?php endif; ?>
                 <a href="<?= tdm_h($CFG->ROOT_DIR . 'Qualification/PrnTeamAbs.php?Event[]=' . rawurlencode($code)) ?>" target="_blank">🖨 Classement des qualifications (PDF)</a>
                 <a href="<?= tdm_h($TDM_ROOT . 'repartition.php?ev=' . rawurlencode($code) . '&from=qualif') ?>">Répartition des poules</a>
                 <?php if ($canValidate):
@@ -291,6 +350,7 @@ echo tdm_styles();
                 <table class="list">
                     <tr><th>Cible</th><th class="num">Rang</th><th>Équipe</th><th>Archers</th>
                         <th class="num">Score</th><th class="num">10</th><th class="num">9</th>
+                        <?php if ($isk): ?><th title="Flèches reçues des téléphones (20 par équipe), ou saisie à la main">📱 Scorekeeper</th><?php endif; ?>
                         <?php if ($showToss): ?><th title="Égalité parfaite (même score, mêmes 10 et 9) : pile ou face">🪙 Pile ou face</th><?php endif; ?></tr>
                     <?php foreach ($teams as $key => $t):
                         $tie = $t->Rank && ($rankCount[$t->Rank] ?? 0) > 1;
@@ -298,6 +358,9 @@ echo tdm_styles();
                         $vs = $isPosted ? (string) ($posted['s'][$key] ?? '') : (string) ($t->Score ?? '');
                         $vt = $isPosted ? (string) ($posted['t'][$key] ?? '') : ($t->Score === null ? '' : (string) $t->Tens);
                         $vn = $isPosted ? (string) ($posted['n'][$key] ?? '') : ($t->Score === null ? '' : (string) $t->Nines);
+                        $isManual = $isk && (in_array($key, $manual, true) || ($isPosted && ($posted['m'][$key] ?? '') === '1'));
+                        // Scorekeeper : cases de saisie seulement pour une équipe reprise à la main.
+                        $rowEdit = $canEdit && (!$isk || $isManual);
                     ?>
                     <tr class="<?= ($err || $t->Issues) ? 'issue' : '' ?><?= $tie ? ' tie' : '' ?>">
                         <td><b><?= tdm_h(tdm_team_target_label($targets[$key][0] ?? 0, $targets[$key][1] ?? 'A')) ?: '—' ?></b></td>
@@ -308,11 +371,29 @@ echo tdm_styles();
                         </td>
                         <td class="archers"><?= implode('<br>', array_map(fn($m) => tdm_h($m->EnFirstName . ' ' . $m->EnName), $t->Members)) ?></td>
                         <td class="num"><input class="score" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="3"
-                            name="s[<?= tdm_h($key) ?>]" value="<?= tdm_h($vs) ?>"<?= $canEdit ? '' : ' disabled' ?>></td>
+                            name="s[<?= tdm_h($key) ?>]" value="<?= tdm_h($vs) ?>"<?= $rowEdit ? '' : ' disabled' ?>></td>
                         <td class="num"><input class="small" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2"
-                            name="t[<?= tdm_h($key) ?>]" value="<?= tdm_h($vt) ?>"<?= $canEdit ? '' : ' disabled' ?>></td>
+                            name="t[<?= tdm_h($key) ?>]" value="<?= tdm_h($vt) ?>"<?= $rowEdit ? '' : ' disabled' ?>></td>
                         <td class="num"><input class="small" type="text" inputmode="numeric" pattern="[0-9]*" maxlength="2"
-                            name="n[<?= tdm_h($key) ?>]" value="<?= tdm_h($vn) ?>"<?= $canEdit ? '' : ' disabled' ?>></td>
+                            name="n[<?= tdm_h($key) ?>]" value="<?= tdm_h($vn) ?>"<?= $rowEdit ? '' : ' disabled' ?>></td>
+                        <?php if ($isk): ?>
+                        <td class="isk">
+                            <?php if ($isManual): ?>
+                                <span class="badge-manual" title="Score saisi à la main : Scorekeeper n'envoie plus rien pour cette équipe">✍ saisie manuelle</span>
+                                <?php if ($canEdit && in_array($key, $manual, true)): ?>
+                                    <button type="submit" class="mini back" name="release" value="<?= tdm_h($key) ?>" formnovalidate
+                                        onclick="return confirm('Rendre « <?= tdm_h(addslashes($t->Name)) ?> » à Scorekeeper ?\n\nLe score saisi à la main sera effacé ; le téléphone de la cible pourra de nouveau envoyer les flèches.');">↩ Rendre à Scorekeeper</button>
+                                <?php endif; ?>
+                                <input type="hidden" name="m[<?= tdm_h($key) ?>]" value="1">
+                            <?php else: ?>
+                                <span class="prog<?= $t->Arrows >= TDM_QUALIF_ARROWS ? ' done' : '' ?>"><?= (int) $t->Arrows ?> / <?= TDM_QUALIF_ARROWS ?> flèches</span>
+                                <?php if ($canEdit): ?>
+                                    <input type="hidden" name="m[<?= tdm_h($key) ?>]" value="1" disabled>
+                                    <button type="button" class="mini manual" title="Téléphone en panne : saisir le score de la feuille d'équipe ; Scorekeeper n'enverra plus rien pour cette équipe">✍ Saisir à la main</button>
+                                <?php endif; ?>
+                            <?php endif; ?>
+                        </td>
+                        <?php endif; ?>
                         <?php if ($showToss): ?>
                         <td class="toss"><?php if (isset($tieOf[$key])):
                             $sig = $tieOf[$key];
@@ -378,6 +459,18 @@ document.querySelectorAll('#tdm button.validate').forEach(function (b) {
                 location.href = <?= json_encode($TDM_ROOT . 'qualif.php') ?> + '?dep=<?= (int) $showDep ?>&valid=' + encodeURIComponent(ev) + '#ev-' + encodeURIComponent(ev);
             })
             .catch(function (e) { b.disabled = false; alert('Validation impossible : ' + e.message); });
+    });
+});
+// Scorekeeper : « Saisir à la main » ouvre les cases de l'équipe (téléphone en panne).
+document.querySelectorAll('#tdm button.manual').forEach(function (b) {
+    b.addEventListener('click', function () {
+        if (!confirm('Saisir cette équipe à la main ?\n\nAprès l\'enregistrement, Scorekeeper n\'enverra plus rien pour ses deux archers '
+            + '(« Rendre à Scorekeeper » annule).')) return;
+        var tr = b.closest('tr');
+        tr.querySelectorAll('input').forEach(function (i) { i.disabled = false; });
+        b.style.display = 'none';
+        var s = tr.querySelector('input.score'); s.focus(); s.select();
+        var d = b.closest('form').querySelector('.dirty'); if (d) d.style.display = 'inline';
     });
 });
 // Signale une saisie non enregistrée ; Entrée passe à la case suivante au lieu d'envoyer.

@@ -9,7 +9,7 @@ Chaque page du module rappelle en tête son rôle et ses étapes.
 | 1 | Configuration | Préparer la compétition pour le TDM. |
 | 2 | Composition des équipes | Former les équipes femme + homme du même club. |
 | 3 | Greffe | Imprimer la feuille de greffe, la liste des archers et des équipes inscrites. |
-| 4 | Qualifications | Attribuer les cibles, imprimer, saisir les scores par équipe. |
+| 4 | Qualifications | Attribuer les cibles, imprimer, saisir les scores par équipe (feuille papier ou Scorekeeper). |
 | 5 | Répartition des poules | Voir comment la qualification remplit les poules. |
 | 6 | Validation qualif → poules | Page IANSEO : départager les égalités et remplir les poules. |
 | 7 | Poules | Imprimer, saisir les matchs, byes 5-0, départage. |
@@ -25,7 +25,10 @@ Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les ép
 **À faire avant le début de la compétition**, comme la composition des équipes. Quatre étapes, dans l'ordre. Chacune peut être relancée : ce qui est déjà en place n'est pas recréé.
 
 1. **Division NE, classes et distances** : crée la division des néo-licenciés (arc classique), ouverte aux
-   classes U13 à S3, avec les distances des seniors classiques et un blason unique de 60 cm. **Son enregistrement active le menu complet et la barre TDM.**
+   classes U13 à S3, avec les distances des seniors classiques et un blason unique de 60 cm. La compétition passe à
+   **une seule distance** (le « Salle 18 m » en prévoit deux) : chaque départ, le matin comme l'après-midi, est une
+   session IANSEO avec seulement la mini-qualif. Rien n'est changé si des flèches sont déjà saisies sur la distance 2.
+   **Son enregistrement active le menu complet et la barre TDM.**
 2. **Départs et horaires** : pour chaque catégorie (NEO, CL, CO, BB), le départ, la date, l'heure et le
    nombre de cibles. Le module crée les sessions de qualification d'IANSEO et contrôle la cohérence avec les
    dates de la compétition. Une alerte signale un départ qui n'a pas assez de cibles.
@@ -35,6 +38,8 @@ Créer la compétition dans IANSEO, type **« Salle 18 m »** FFTA (avec les ép
    La **durée du tir** (facultative, en minutes) est la durée de la qualification dans le programme horaire d'IANSEO ;
    elle fixe aussi la fin de la session. Le plan du pas de tir affiche « Tir 09:00 à 11:00 », et une alerte signale un
    tir qui déborde sur le départ suivant (entraînement compris).
+   La **saisie des scores** se choisit par départ : **feuille papier** (score d'équipe saisi dans la page
+   Qualifications) ou **Scorekeeper** (un téléphone par cible, voir « Départ saisi avec Scorekeeper » plus bas).
 3. **Archers et composition des équipes** : saisir ou importer les archers dans IANSEO (menu Participants),
    puis composer les équipes (étape 2 du déroulé). Le bouton **Placer les archers dans la session de leur départ**
    range chaque archer dans le départ de sa catégorie.
@@ -93,7 +98,7 @@ Mini-qualification par équipe : 5 volées de 4 flèches (2 par archer).
    Tirage automatique pour toutes les catégories ou une seule, puis ajustements à la main. Deux équipes
    du même club et de la même catégorie sur une cible : simple avertissement.
 2. **Impressions** : plan du pas de tir (un par départ, avec les blasons), feuilles de marque de qualification
-   (une par équipe, dans l'ordre des cibles, avec le QR code Scorekeeper s'il est activé) et classement.
+   (une par équipe, dans l'ordre des cibles) et classement.
 3. **Saisie** : **Ouvrir la saisie** du départ, puis entrer le score de chaque équipe et ses nombres de 10 et de 9
    (départage). Un seul départ est ouvert à la fois. Une case vide retire l'équipe du classement.
 4. **Pile ou face** : à égalité parfaite (même score, mêmes 10, mêmes 9), une colonne « 🪙 Pile ou face »
@@ -101,6 +106,33 @@ Mini-qualification par équipe : 5 volées de 4 flèches (2 par archer).
    puis enregistrez. Sans égalité, la colonne n'est pas affichée. Le pile ou face est à refaire si un score change.
 5. **✅ Valider vers les poules** : remplit les poules avec ce classement (score, 10, 9, pile ou face). Le bouton
    reste grisé tant qu'un pile ou face n'est pas fait. « Refaire la validation » efface les matchs de poule déjà saisis.
+
+### Départ saisi avec Scorekeeper
+
+Le mode de saisie se choisit pour chaque départ (Configuration, étape 2, colonne « Saisie des scores »).
+Le score d'une équipe est toujours la **somme de ses deux archers** : seule la façon de le saisir change.
+
+- **Impressions** : la **feuille de marque d'équipe** reste devant les archers et **fait foi** en cas de désaccord ;
+  une page par cible (équipe A à gauche, B à droite), avec **un seul QR code de la cible**, sur la feuille de gauche. « 📱 QR codes Scorekeeper »
+  imprime aussi, pour la catégorie, une planche avec une case par cible : ses deux équipes et son QR code. Le QR est
+  celui des feuilles natives d'IANSEO : il désigne la cible, le téléphone affiche ensuite ses archers. Sur le téléphone, l'équipe de la position A est en A et B (femme, homme), celle de la
+  position B en C et D.
+- **Feuilles complétées**, à imprimer si les archers les demandent : « Feuilles complétées — équipes » reconstruit la
+  feuille d'équipe à partir des flèches des deux archers (à chaque volée, 2 flèches de la femme puis 2 de l'homme,
+  totaux, 10 et 9) ; « Feuilles complétées — archers (IANSEO) » imprime les feuilles natives remplies, une par archer.
+- **Ouverture du départ** : refusée tant que Scorekeeper n'est pas configuré dans IANSEO, que **l'adresse du serveur**
+  (Compétition › Informations principales) est vide ou locale (« localhost »), qu'un archer n'a pas de cible ou
+  **pas de blason** (Scorekeeper ignorerait cet archer sans prévenir).
+- **Pendant le tir** : un téléphone par cible (scan du QR), le marqueur saisit les 2 flèches de chaque archer à chaque
+  volée. Les totaux d'équipe, les 10 et les 9 se mettent à jour sur la page Qualifications, avec l'avancement
+  (« 12 / 20 flèches »). Pas de saisie d'équipe pour ce départ.
+- **Téléphone en panne** : « ✍ Saisir à la main » sur l'équipe, puis saisir le score, les 10 et les 9 de la feuille
+  d'équipe. Ses deux archers sont alors fermés à Scorekeeper (le téléphone répond « feuille déjà validée ») : rien ne
+  peut écraser la saisie. « ↩ Rendre à Scorekeeper » annule (le score saisi à la main est effacé).
+- **Correction d'une flèche** : dans le téléphone, ou dans la saisie native d'IANSEO flèche par flèche.
+- **Fermer la saisie** verrouille aussi la session dans Scorekeeper : plus aucun envoi après la validation vers les
+  poules. Un départ en feuille papier est toujours verrouillé pour Scorekeeper.
+- Blason de 60 cm partagé (NEO, arc nu) : chaque flèche est à attribuer à son archer (flèches marquées).
 
 ## 5. Répartition des poules
 

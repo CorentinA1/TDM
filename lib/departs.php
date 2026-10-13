@@ -248,6 +248,196 @@ function tdm_set_open_depart($n)
     setModuleParameter('TDM', 'OpenDepart', (int) $n);
 }
 
+// ── Mode de saisie de la qualif : feuille papier ou Scorekeeper ──────────────
+//
+// Feuille papier : score d'équipe saisi dans le module (qualif.php), rangé sur la
+// femme (tdm_store_team_score()). Scorekeeper : un téléphone par cible (QR des
+// feuilles de marque natives d'IANSEO), saisie par archer ; IANSEO range les
+// flèches de chaque archer (QuD1Arrowstring) et recalcule ses totaux. Dans les
+// deux cas, le score d'équipe est la somme de ses deux archers.
+
+/** Modes possibles d'un départ. */
+const TDM_QUALIF_MODES = ['paper' => 'Feuille papier', 'isk' => 'Scorekeeper'];
+
+/** Départ => mode (« paper » par défaut). */
+function tdm_qualif_modes()
+{
+    $out = [];
+    foreach ((array) getModuleParameter('TDM', 'QualifMode', []) as $n => $m) {
+        if (isset(TDM_QUALIF_MODES[$m])) $out[(int) $n] = $m;
+    }
+    return $out;
+}
+
+function tdm_qualif_mode($n)
+{
+    return tdm_qualif_modes()[(int) $n] ?? 'paper';
+}
+
+/** @param array<int, string> $modes Départ => mode. */
+function tdm_set_qualif_modes(array $modes)
+{
+    $out = [];
+    foreach ($modes as $n => $m) if ($m === 'isk') $out[(int) $n] = 'isk';
+    setModuleParameter('TDM', 'QualifMode', $out);
+}
+
+/** Clé du verrou natif d'une session de qualif dans Scorekeeper (ISK-NG « LockedSessions », distance 1). */
+function tdm_isk_lock_key($ses)
+{
+    return 'Q|' . (int) $ses . '|1';
+}
+
+/**
+ * Verrous Scorekeeper voulus : seul le départ ouvert en mode Scorekeeper reçoit
+ * les téléphones ; tous les autres départs utilisés sont verrouillés (départ
+ * fermé, ou en feuille papier : un téléphone ne doit pas écraser la saisie du
+ * module). Les verrous qui ne concernent pas ces départs sont gardés. Fonction pure.
+ *
+ * @param string[] $locked Verrous actuels.
+ * @param int[] $used Départs utilisés.
+ * @param array<int, string> $modes Départ => mode.
+ * @param int $open Départ ouvert (0 = aucun).
+ * @return string[]
+ */
+function tdm_isk_locks(array $locked, array $used, array $modes, $open)
+{
+    $out = array_values(array_filter($locked, function ($k) use ($used) {
+        foreach ($used as $n) if ($k === tdm_isk_lock_key($n)) return false;
+        return true;
+    }));
+    foreach ($used as $n) {
+        if (!((int) $n === (int) $open && ($modes[$n] ?? 'paper') === 'isk')) $out[] = tdm_isk_lock_key($n);
+    }
+    return $out;
+}
+
+/**
+ * Applique les verrous Scorekeeper des départs (tdm_isk_locks()). Sans
+ * Scorekeeper configuré : rien.
+ */
+function tdm_isk_sync_locks()
+{
+    if (!tdm_scorekeeper_enabled()) return;
+    $used = array_values(array_unique(tdm_departs_map()));
+    $locked = (array) getModuleParameter('ISK-NG', 'LockedSessions', []);
+    $new = tdm_isk_locks($locked, $used, tdm_qualif_modes(), tdm_open_depart());
+    if ($new != array_values($locked)) setModuleParameter('ISK-NG', 'LockedSessions', $new);
+}
+
+/**
+ * Ce qui empêche d'ouvrir un départ en mode Scorekeeper. Fonction pure.
+ *
+ * @param bool $enabled Scorekeeper configuré (tdm_scorekeeper_enabled()).
+ * @param int $archers Archers du départ (en équipe).
+ * @param int $noTarget Archers sans cible.
+ * @param int $noFace Archers sans blason (Scorekeeper les ignore sans message).
+ * @param string|null $server Adresse du serveur (ISK-NG « ServerUrl », Compétition › Informations principales) ; null = non contrôlée.
+ * @return string[]
+ */
+function tdm_isk_problems($enabled, $archers, $noTarget, $noFace, $server = null)
+{
+    $out = [];
+    if (!$enabled) $out[] = 'Scorekeeper n\'est pas configuré dans IANSEO (mode ISK-NG à régler, autre que « live »)';
+    if ($enabled && $server !== null && !tdm_isk_server_ok($server)) {
+        $out[] = trim($server) === ''
+            ? 'adresse du serveur Scorekeeper non renseignée (Compétition › Informations principales)'
+            : "adresse du serveur Scorekeeper « $server » injoignable par les téléphones : indiquez l'adresse du poste "
+              . 'IANSEO sur le réseau, par exemple http://192.168.1.10 (Compétition › Informations principales)';
+    }
+    if (!$archers) $out[] = 'aucun archer en équipe dans ce départ';
+    if ($noTarget) $out[] = "$noTarget archer(s) sans cible : faites l'attribution des cibles";
+    if ($noFace) $out[] = "$noFace archer(s) sans blason dans IANSEO : Scorekeeper ne les prendrait pas en compte";
+    return $out;
+}
+
+/**
+ * Adresse du serveur utilisable par les téléphones (QR codes Scorekeeper) : http(s)://hôte,
+ * pas « localhost » ni 127.x (le téléphone se joindrait lui-même). Fonction pure.
+ */
+function tdm_isk_server_ok($url)
+{
+    if (!preg_match('#^https?://([^/:?\#]+)#i', trim((string) $url), $m)) return false;
+    $host = strtolower($m[1]);
+    return $host !== 'localhost' && $host !== '::1' && $host !== '[::1]' && !preg_match('/^127\./', $host) && $host !== '0.0.0.0';
+}
+
+/** Contrôles avant d'ouvrir un départ en mode Scorekeeper (tdm_isk_problems()). */
+function tdm_isk_open_problems($n)
+{
+    global $TDM_TOUR;
+    $divs = [];
+    foreach (tdm_departs_map() as $cat => $d) if ($d === (int) $n && isset(TDM_CATEGORIES[$cat])) $divs[] = StrSafe_DB(TDM_CATEGORIES[$cat]['div']);
+    $r = (object) ['N' => 0, 'NoTarget' => 0, 'NoFace' => 0];
+    if ($divs) {
+        $r = safe_fetch(safe_r_sql("SELECT COUNT(*) AS N, SUM(QuTarget = 0) AS NoTarget,
+                SUM(NOT EXISTS (SELECT 1 FROM TargetFaces WHERE TfTournament = EnTournament AND TfId = EnTargetFace)) AS NoFace
+            FROM Entries INNER JOIN Qualifications ON QuId = EnId
+            WHERE EnTournament = " . StrSafe_DB($TDM_TOUR) . " AND EnAthlete = 1 AND EnStatus <= 1 AND EnTeamMixEvent = 1
+              AND EnDivision IN (" . implode(',', $divs) . ")"));
+    }
+    return tdm_isk_problems(tdm_scorekeeper_enabled(), (int) $r->N, (int) $r->NoTarget, (int) $r->NoFace,
+        (string) getModuleParameter('ISK-NG', 'ServerUrl', ''));
+}
+
+/** Des scores de qualif sont-ils déjà saisis dans ce départ (session) ? */
+function tdm_depart_has_scores($n)
+{
+    global $TDM_TOUR;
+    $r = safe_fetch(safe_r_sql("SELECT COUNT(*) AS N FROM Entries INNER JOIN Qualifications ON QuId = EnId
+        WHERE EnTournament = " . StrSafe_DB($TDM_TOUR) . " AND EnAthlete = 1 AND QuSession = " . intval($n) . "
+          AND (QuScore > 0 OR QuGold > 0 OR QuD1Arrowstring <> '')"));
+    return (int) $r->N > 0;
+}
+
+/** Volées Scorekeeper reçues pour un départ et pas encore importées (mode avec import manuel). */
+function tdm_isk_pending($n)
+{
+    global $TDM_TOUR;
+    require_once __DIR__ . '/qualif.php';
+    if (!tdm_isk_table()) return 0;
+    $r = safe_fetch(safe_r_sql("SELECT COUNT(*) AS N FROM IskData WHERE IskDtTournament = " . StrSafe_DB($TDM_TOUR) . "
+        AND IskDtType = 'Q' AND IskDtSession = " . intval($n)));
+    return $r ? (int) $r->N : 0;
+}
+
+/**
+ * QR code Scorekeeper d'une cible de qualification, exactement comme les feuilles
+ * de marque natives imprimées avec le réglage par défaut « sans distance »
+ * (Common/Lib/ScorecardsLib.php), vérifié en décodant le QR natif imprimé :
+ * {"u":…,"c":…,"s":"2","t":"0005","st":"Q"} — session en texte, pas de distance,
+ * et la cible SEULE (numéro de cible, que la fonction native met sur 4 chiffres :
+ * « 0005 »), sans la session devant (« 2005 » : l'application ne trouvait pas la
+ * cible). Le téléphone affiche ensuite tous les archers de la cible (A, B, C, D).
+ *
+ * @param float $scale Agrandissement (1 = 25 mm, comme le natif).
+ */
+function tdm_isk_qr($pdf, $x, $y, $ses, $tg, $scale = 1.0, $small = false)
+{
+    require_once HTDOCS . '/Api/ISK-NG/DrawQRCode.php';
+    $target = (string) (int) $tg;
+    if ($scale != 1.0) {
+        $pdf->StartTransform();
+        $pdf->ScaleXY($scale * 100, $x, $y);
+    }
+    DrawQRCode_ISK_NG($pdf, $x, $y, (string) (int) $ses, 0, $target, '', 'Q', false, '', $small);
+    if ($scale != 1.0) $pdf->StopTransform();
+}
+
+/**
+ * Feuilles de marque natives d'IANSEO, complétées avec les flèches de chaque archer
+ * (Qualification/PDFScore.php, option « ScoreFilled ») : une page par cible, une
+ * carte par archer, cibles $from à $to du départ.
+ */
+function tdm_native_filled_scorecards_url($ses, $from = 1, $to = 999)
+{
+    global $CFG;
+    return $CFG->ROOT_DIR . 'Qualification/PDFScore.php?' . http_build_query([
+        'x_Session' => (int) $ses, 'x_From' => (int) $from, 'x_To' => (int) $to, 'ScoreDraw' => 'Complete',
+        'ScoreDist' => [1], 'ScoreFilled' => 1, 'ScorePageHeaderFooter' => 1, 'ScoreFlags' => 1, 'noEmpty' => 1,
+    ]);
+}
+
 /**
  * Enregistre les départs : sessions IANSEO (création / mise à jour), horaire
  * du programme, catégorie → départ, puis place les archers.

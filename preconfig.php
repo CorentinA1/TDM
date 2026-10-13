@@ -111,6 +111,18 @@ if ($action !== '') {
             $_SESSION['TDM_DEPARTS_POST'] = $_POST;
         } else {
             $done = tdm_save_departs($map, $sessions);
+            // Mode de saisie de chaque départ ; prévenir si des scores existent déjà quand il change.
+            $oldModes = tdm_qualif_modes();
+            $modes = [];
+            foreach (array_keys($sessions) as $n) {
+                $modes[$n] = (($_POST['ses'][$n]['mode'] ?? '') === 'isk') ? 'isk' : 'paper';
+                if ($modes[$n] !== ($oldModes[$n] ?? 'paper') && tdm_depart_has_scores($n)) {
+                    $c['warnings'][] = "départ $n : saisie passée en « " . TDM_QUALIF_MODES[$modes[$n]] . ' » alors que des scores sont déjà saisis'
+                        . ($modes[$n] === 'isk' ? ' (les scores saisis sur feuille seront remplacés par les envois des téléphones)' : '');
+                }
+            }
+            tdm_set_qualif_modes($modes);
+            tdm_isk_sync_locks();
             $flash['ok'] = 'Étape 2 — départs enregistrés' . ($done ? ' : ' . implode(', ', $done) : '') . '.';
             $other = array_merge(array_diff($c['errors'], $blocking), $c['warnings']);
             if ($other) $flash['warn'] = implode(' ; ', $other) . '.';
@@ -212,7 +224,9 @@ function tdm_check_line($ok, $text)
                 <?php foreach ($s1['checks'] as [$ok, $text]) echo tdm_check_line($ok, $text); ?>
             </ul>
             <p class="help">Les néo-licenciés tirent en arc classique dans une division à part (NE), acceptée par
-                les classes U13 à S3, avec les distances des seniors classiques.</p>
+                les classes U13 à S3, avec les distances des seniors classiques. La compétition passe à <b>une seule
+                distance</b> (le « Salle 18 m » en prévoit deux) : chaque départ, le matin comme l'après-midi, est une
+                session IANSEO avec seulement la mini-qualif (comme Compétition › Paramètres avancés › Nombre de distances).</p>
             <?php if ($canWrite && !$s1['blocking']): ?>
                 <form method="post" action="<?= tdm_h($TDM_ROOT . 'preconfig.php') ?>">
                     <?= tdm_token_field() ?><input type="hidden" name="action" value="step1">
@@ -239,7 +253,8 @@ function tdm_check_line($ok, $text)
                 sa date, son heure (programme IANSEO) et son nombre de cibles, et y place les archers de la catégorie.
                 L'<b>entraînement</b> (heure et durée, facultatif) est l'échauffement de la session dans le programme IANSEO :
                 il s'affiche sur le plan du pas de tir, comme la <b>durée du tir</b> (facultative : durée de la qualification
-                dans le programme IANSEO, fin de la session). Chaque départ
+                dans le programme IANSEO, fin de la session). <b>Saisie des scores</b> : feuille papier (score d'équipe saisi dans la
+                page Qualifications) ou Scorekeeper (un téléphone par cible, feuilles de marque natives d'IANSEO avec QR code). Chaque départ
                 réutilise le pas de tir à partir de la cible 1 ; la colonne « Qualif » indique les cibles nécessaires (chaque catégorie sur
                 ses cibles, deux équipes par cible). La saisie des qualifs s'ouvre départ par départ, depuis la page Qualifications.
                 Compétition : <b><?= tdm_h(tdm_date_fr($tour->ToWhenFrom)) ?><?= $tour->ToWhenTo !== $tour->ToWhenFrom ? ' au ' . tdm_h(tdm_date_fr($tour->ToWhenTo)) : '' ?></b>.</p>
@@ -254,6 +269,14 @@ function tdm_check_line($ok, $text)
                     && ($qSessions[$n]['ends'] !== TDM_QUALIF_ENDS_PER_ARCHER || $qSessions[$n]['arrows'] !== TDM_QUALIF_ARROWS_PER_END)); ?>
                 <?= tdm_check_line(!$badFmt, $badFmt ? 'Format de saisie par archer à régler (départ ' . implode(', ', $badFmt) . ') — cliquez sur Enregistrer'
                     : 'Saisie par archer : ' . TDM_QUALIF_ENDS_PER_ARCHER . ' volées de ' . TDM_QUALIF_ARROWS_PER_END . ' flèches (Scorekeeper, saisie native)') ?>
+                <?php $iskDeps = array_keys(array_filter(tdm_qualif_modes(), fn($m, $n) => $m === 'isk' && in_array($n, $depMap, true), ARRAY_FILTER_USE_BOTH));
+                if ($iskDeps): ?>
+                    <?php $iskServer = (string) getModuleParameter('ISK-NG', 'ServerUrl', '');
+                    $iskPb = tdm_isk_problems(tdm_scorekeeper_enabled(), 1, 0, 0, $iskServer); ?>
+                    <?= tdm_check_line(!$iskPb, !$iskPb
+                        ? 'Scorekeeper configuré dans IANSEO, serveur ' . $iskServer . ' (départ ' . implode(', ', $iskDeps) . ' en saisie Scorekeeper)'
+                        : 'Départ ' . implode(', ', $iskDeps) . ' en saisie Scorekeeper : ' . implode(' ; ', $iskPb)) ?>
+                <?php endif; ?>
             </ul>
             <?php endif; ?>
             <form method="post" action="<?= tdm_h($TDM_ROOT . 'preconfig.php') ?>" id="f4">
@@ -277,7 +300,8 @@ function tdm_check_line($ok, $text)
                         <th title="Échauffement avant le tir (programme horaire IANSEO), facultatif">Entraînement</th><th>Durée</th>
                         <th>Début du tir</th>
                         <th title="Durée de la phase de qualification (programme horaire IANSEO), facultatif">Durée du tir</th>
-                        <th>Cibles</th><th>Qualif</th></tr>
+                        <th>Cibles</th><th>Qualif</th>
+                        <th title="Feuille papier : score d'équipe saisi dans la page Qualifications. Scorekeeper : un téléphone par cible (feuilles de marque natives d'IANSEO avec QR code)">Saisie des scores</th></tr>
                     <?php for ($n = 1; $n <= TDM_MAX_DEPARTS; $n++):
                         $s = $qSessions[$n] ?? ['name' => '', 'date' => '', 'time' => '', 'warm' => '', 'warmDur' => 0, 'dur' => 0];
                         $p = $depPost['ses'][$n] ?? null; ?>
@@ -300,6 +324,12 @@ function tdm_check_line($ok, $text)
                                    title="Nombre de cibles du pas de tir pour ce départ (session IANSEO)"
                                    value="<?= (int) ($p['targets'] ?? ($s['targets'] ?? 0 ?: (reset($qSessions)['targets'] ?? 24))) ?>"></td>
                         <td class="need" style="font-size:12px"></td>
+                        <td><?php $md = (string) ($p['mode'] ?? tdm_qualif_mode($n)); ?>
+                            <select name="ses[<?= $n ?>][mode]">
+                                <?php foreach (TDM_QUALIF_MODES as $k => $label): ?>
+                                    <option value="<?= $k ?>"<?= $md === $k ? ' selected' : '' ?>><?= tdm_h($label) ?></option>
+                                <?php endforeach; ?>
+                            </select></td>
                     </tr>
                     <?php endfor; ?>
                 </table>

@@ -11,7 +11,16 @@
  * règle. On le range donc sur les archers : le score, les 10 et les 9 sur la
  * femme (ou le premier archer), seulement les 10 flèches sur l'homme. La somme
  * que fait IANSEO redonne le score de l'équipe.
+ *
+ * Départ en mode Scorekeeper (lib/departs.php) : chaque archer reçoit ses
+ * propres flèches de l'application, la somme reste la même règle. Une équipe
+ * reprise à la main (téléphone en panne) est rangée comme en feuille papier,
+ * son détail de flèches effacé et sa feuille marquée « validée » (QuConfirm,
+ * bit de la distance 1) : Scorekeeper refuse alors tout envoi pour ses archers.
  */
+
+/** Bit de QuConfirm d'une feuille validée, distance 1 (comme Scorekeeper et les codes-barres). */
+const TDM_CONFIRM_D1 = 2;
 
 /** Flèches tirées par chaque archer en mini-qualification (5 volées × 2). */
 const TDM_QUALIF_ARROWS_PER_ARCHER = 10;
@@ -52,6 +61,27 @@ function tdm_parse_qualif($score, $tens, $nines)
     return ['ok' => true, 'error' => '', 'score' => $s, 'tens' => $t, 'nines' => $n];
 }
 
+/**
+ * Volées d'équipe reconstruites à partir des flèches de chaque archer (saisie
+ * Scorekeeper) : à chaque volée, les 2 flèches de la femme puis les 2 de
+ * l'homme. Fonction pure.
+ *
+ * @param string[] $strings Détail des flèches des archers (QuD1Arrowstring, lettres IANSEO), femme d'abord.
+ * @return string[][] volée (1..5) => flèches (lettre IANSEO, ' ' = pas de flèche) ; [] sans aucune flèche.
+ */
+function tdm_team_ends(array $strings, $ends = 5, $perArcher = 2)
+{
+    if (trim(implode('', $strings)) === '') return [];
+    $out = [];
+    for ($e = 1; $e <= $ends; $e++) {
+        $out[$e] = [];
+        foreach ($strings as $s) {
+            for ($k = 0; $k < $perArcher; $k++) $out[$e][] = substr(str_pad((string) $s, $ends * $perArcher), ($e - 1) * $perArcher + $k, 1);
+        }
+    }
+    return $out;
+}
+
 /** Nom affiché d'une équipe : « Club Alpha 2 » (numéro omis s'il vaut 0). */
 function tdm_team_name($club, $subTeam)
 {
@@ -76,7 +106,7 @@ function tdm_event_teams($event)
     // Un archer peut répondre à deux règles (femmes, hommes) : DISTINCT sur EnId.
     $rs = safe_r_sql("SELECT DISTINCT EnId, EnSex, EnCode, EnName, EnFirstName, EnSubTeam, EnDivision, EnClass,
             $country AS CoId, CoCode, CoName,
-            QuScore, QuGold, QuXnine, QuHits
+            QuScore, QuGold, QuXnine, QuHits, QuD1Arrowstring
         FROM Entries
         INNER JOIN EventClass ON EcTournament = EnTournament AND EcCode = $ev AND EcTeamEvent > 0
             AND EcDivision = EnDivision AND EcClass = EnClass AND (EcSubClass = '' OR EcSubClass = EnSubClass)
@@ -128,6 +158,8 @@ function tdm_event_teams($event)
         if (count($t->Members) > 2 && array_filter($t->Members, fn($m) => (int) $m->EnSubTeam === 0)) {
             $t->Issues[] = "numéro d'équipe manquant : IANSEO formera les équipes lui-même";
         }
+        // Flèches tirées (Scorekeeper : avancement ; feuille papier : 10 par archer dès qu'un score est saisi).
+        $t->Arrows = $t->Hits;
         unset($t->Hits);
     }
     return $teams;
@@ -273,12 +305,24 @@ function tdm_country_sql($mode)
  * Range le score d'une équipe sur ses archers (voir l'en-tête du fichier).
  *
  * @param object $team Équipe (tdm_event_teams()).
+ * Le détail des flèches est effacé : une saisie d'équipe ne doit pas être
+ * recalculée plus tard à partir de flèches envoyées par Scorekeeper.
+ *
+ * @param object $team Équipe (tdm_event_teams()).
  * @param array $q Saisie contrôlée (tdm_parse_qualif()) ; score null = efface.
+ * @param bool $lock Reprise à la main d'un départ Scorekeeper : feuilles marquées
+ *        « validées » (Scorekeeper refuse alors les envois) et volées en attente effacées.
  * @return bool true si quelque chose a changé.
  */
-function tdm_store_team_score($team, array $q)
+function tdm_store_team_score($team, array $q, $lock = false)
 {
     $changed = false;
+    $ids = implode(',', array_map(fn($m) => intval($m->EnId), $team->Members));
+    if ($lock && $ids) {
+        safe_w_sql("UPDATE Qualifications SET QuConfirm = QuConfirm | " . TDM_CONFIRM_D1 . " WHERE QuId IN ($ids)");
+        if (safe_w_affected_rows()) $changed = true;
+        tdm_isk_drop_pending($team);
+    }
     foreach ($team->Members as $i => $m) {
         $carrier = ($i === 0); // femme d'abord (tri EnSex DESC)
         if ($q['score'] === null) {
@@ -291,13 +335,63 @@ function tdm_store_team_score($team, array $q)
         }
         // Tout sur la 1re distance ; la 2e (salle 2×18 m) est remise à zéro.
         safe_w_sql("UPDATE Qualifications SET
-                QuD1Score = $s, QuD1Gold = $g, QuD1Xnine = $x, QuD1Hits = $h,
-                QuD2Score = 0, QuD2Gold = 0, QuD2Xnine = 0, QuD2Hits = 0,
+                QuD1Score = $s, QuD1Gold = $g, QuD1Xnine = $x, QuD1Hits = $h, QuD1Arrowstring = '',
+                QuD2Score = 0, QuD2Gold = 0, QuD2Xnine = 0, QuD2Hits = 0, QuD2Arrowstring = '',
                 QuScore = $s, QuGold = $g, QuXnine = $x, QuHits = $h
             WHERE QuId = " . intval($m->EnId));
         if (safe_w_affected_rows()) $changed = true;
     }
     return $changed;
+}
+
+/**
+ * « Rendre à Scorekeeper » une équipe reprise à la main : score effacé, feuilles
+ * de nouveau ouvertes aux envois de l'application (bit QuConfirm retiré).
+ *
+ * @return bool true si quelque chose a changé.
+ */
+function tdm_release_team($team)
+{
+    $ids = implode(',', array_map(fn($m) => intval($m->EnId), $team->Members));
+    if (!$ids) return false;
+    safe_w_sql("UPDATE Qualifications SET QuConfirm = QuConfirm & ~" . TDM_CONFIRM_D1 . ",
+            QuD1Score = 0, QuD1Gold = 0, QuD1Xnine = 0, QuD1Hits = 0, QuD1Arrowstring = '',
+            QuScore = 0, QuGold = 0, QuXnine = 0, QuHits = 0
+        WHERE QuId IN ($ids)");
+    return safe_w_affected_rows() > 0;
+}
+
+/** Volées Scorekeeper en attente d'import pour les archers d'une équipe : effacées. */
+function tdm_isk_drop_pending($team)
+{
+    global $TDM_TOUR;
+    if (!tdm_isk_table()) return;
+    $ids = implode(',', array_map(fn($m) => intval($m->EnId), $team->Members));
+    safe_w_sql("DELETE IskData FROM IskData INNER JOIN Qualifications ON IskDtTargetNo = CONCAT(QuSession, '.', QuTarget, QuLetter)
+        WHERE IskDtTournament = " . StrSafe_DB($TDM_TOUR) . " AND IskDtType = 'Q' AND IskDtMatchNo = 0 AND QuId IN ($ids)");
+}
+
+/** La table des volées Scorekeeper existe-t-elle (API ISK-NG installée) ? */
+function tdm_isk_table()
+{
+    static $ok = null;
+    if ($ok === null) $ok = (bool) safe_num_rows(safe_r_sql("SHOW TABLES LIKE 'IskData'"));
+    return $ok;
+}
+
+/** Équipes reprises à la main dans un départ Scorekeeper : clés d'équipe (paramètre TDM « IskManual »). */
+function tdm_isk_manual_get($code)
+{
+    $all = (array) getModuleParameter('TDM', 'IskManual', []);
+    return array_values((array) ($all[$code] ?? []));
+}
+
+function tdm_isk_manual_set($code, array $keys)
+{
+    $all = (array) getModuleParameter('TDM', 'IskManual', []);
+    $keys = array_values(array_unique($keys));
+    if ($keys) $all[$code] = $keys; else unset($all[$code]);
+    setModuleParameter('TDM', 'IskManual', $all);
 }
 
 /**
