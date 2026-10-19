@@ -20,11 +20,11 @@ include($CFG->DOCUMENT_PATH . 'Common/Templates/head.php');
 echo tdm_styles();
 ?>
 <style>
-#tdm table.list td.place { font-weight:800; color:var(--bleu); font-size:15px; white-space:nowrap; }
+#tdm table.list td.place { font-weight:800; color:var(--lien); font-size:15px; white-space:nowrap; }
 #tdm table.list td.pts { font-weight:800; font-size:15px; }
-#tdm table.list tr.podium td { background:#fffbea; }
-#tdm table.list tr.unranked td { color:#9a9ea1; }
-#tdm table.list .sub { font-size:11px; color:#7d8183; }
+#tdm table.list tr.podium td { background:var(--warn-fond); }
+#tdm table.list tr.unranked td { color:var(--sous); }
+#tdm table.list .sub { font-size:11px; color:var(--sous); }
 #tdm .bso { font-size:11px; font-weight:700; color:var(--rose); }
 #tdm form.ffta { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:flex-end; }
 #tdm form.ffta label { display:flex; flex-direction:column; gap:3px; font-size:12px; font-weight:600; }

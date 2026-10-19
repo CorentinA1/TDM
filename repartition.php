@@ -27,21 +27,21 @@ echo tdm_styles();
 <style>
 #tdm .tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:12px; }
 #tdm .tabs a { padding:4px 12px; border-radius:14px; border:1px solid var(--bord); text-decoration:none; color:var(--gris); }
-#tdm .tabs a.on { background:var(--bleu); color:#fff; border-color:var(--bleu); }
+#tdm .tabs a.on { background:var(--bleu); color:var(--sur-bleu); border-color:var(--bleu); }
 #tdm .rank { columns:2 260px; font-size:12px; margin:0 0 12px; padding:0; list-style:none; }
 #tdm .rank li { padding:1px 0; break-inside:avoid; }
-#tdm .rank b { display:inline-block; min-width:26px; color:var(--bleu); }
+#tdm .rank b { display:inline-block; min-width:26px; color:var(--lien); }
 #tdm .cfgs { display:flex; flex-wrap:wrap; gap:14px; }
 #tdm .cfg { border:1px solid var(--bord); border-radius:6px; padding:8px; flex:0 1 auto; }
 #tdm .cfg.cur { border:2px solid var(--rose); box-shadow:0 0 0 3px rgba(249,10,114,.12); }
 #tdm .cfg h4 { margin:0 0 6px; font-size:13px; color:var(--bleu-fonce); }
-#tdm .cfg h4 small { font-weight:normal; color:#7d8183; }
+#tdm .cfg h4 small { font-weight:normal; color:var(--sous); }
 #tdm .cfg h4 .cur { color:var(--rose); }
 #tdm .cfg table { border-collapse:collapse; font-size:12px; }
-#tdm .cfg th { background:var(--bleu); color:#fff; padding:3px 8px; font-weight:600; }
-#tdm .cfg td { border:1px solid #e3e5e7; padding:2px 6px; white-space:nowrap; }
-#tdm .cfg td b { color:var(--bleu); margin-right:4px; }
-#tdm .cfg td.bye { color:#aab; font-style:italic; }
+#tdm .cfg th { background:var(--bleu); color:var(--sur-bleu); padding:3px 8px; font-weight:600; }
+#tdm .cfg td { border:1px solid var(--bord); padding:2px 6px; white-space:nowrap; }
+#tdm .cfg td b { color:var(--lien); margin-right:4px; }
+#tdm .cfg td.bye { color:var(--sous); font-style:italic; }
 @media print {
     #tdm .tabs, #tdm .noprint, #tdm .tdm-head nav { display:none !important; }
     #tdm .card { box-shadow:none; break-inside:avoid-page; }

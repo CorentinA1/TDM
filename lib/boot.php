@@ -166,39 +166,49 @@ function tdm_header($current, $intro, array $steps = [], $note = '', $back = nul
 function tdm_styles()
 {
     return '<style>
-#tdm { --bleu:#002b92; --bleu-fonce:#001a5c; --bleu-clair:#eef2fc; --rose:#f90a72; --gris:#4c4e50;
-       --bord:#d2d4d6; --fond:#f7f7f7; --rouge:#b3261e; --orange:#8a5a00; --vert:#1e5e33;
+#tdm {
+    /* Couleurs : variables IANSEO (Common/Styles/colors.css), redéfinies par le module THEME pour chaque palette
+       et pour le mode sombre. États : --text-success / --text-danger / --text-warning mêlées à --black (texte) ou à
+       --row-background (fonds), lisibles dans les deux modes. Seul le rose TDM (identité du trophée) reste fixe. */
+    --bleu:var(--header-dark); --sur-bleu:var(--row-main-text); --bleu-fonce:var(--main-text); --bleu-clair:var(--table-background);
+    --bleu-survol:color-mix(in srgb, var(--header-dark) 82%, var(--black)); --lien:var(--thm-link, var(--header-dark));
+    --rose:#f90a72;
+    --gris:var(--text-dark); --sous:var(--text-muted); --bord:var(--input-border); --fond:var(--header-light);
+    --carte:var(--row-background); --champ:var(--text-white); --champ-texte:var(--black);
+    --vert:color-mix(in srgb, var(--text-success) 60%, var(--black)); --ok-fond:color-mix(in srgb, var(--text-success) 14%, var(--row-background)); --ok-bord:color-mix(in srgb, var(--text-success) 45%, var(--row-background)); --ok-fort:color-mix(in srgb, var(--text-success) 28%, var(--row-background));
+    --rouge:color-mix(in srgb, var(--text-danger) 70%, var(--black)); --err-fond:color-mix(in srgb, var(--text-danger) 14%, var(--row-background)); --err-bord:color-mix(in srgb, var(--text-danger) 45%, var(--row-background));
+    --orange:color-mix(in srgb, var(--text-warning) 50%, var(--black)); --warn-fond:color-mix(in srgb, var(--text-warning) 16%, var(--row-background)); --warn-bord:color-mix(in srgb, var(--text-warning) 55%, var(--row-background));
        max-width:1100px; color:var(--gris); font-size:13px; }
 #tdm .tdm-head { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:6px 0 14px; }
-#tdm .tdm-head h2 { margin:0; color:var(--bleu); font-size:18px; }
+#tdm .tdm-head h2 { margin:0; color:var(--lien); font-size:18px; }
 #tdm .tdm-head h2 .page { font-weight:600; }
-#tdm .tdm-head .step-tag { font-size:11px; font-weight:700; color:#fff; background:var(--rose); padding:2px 10px; border-radius:10px; }
+#tdm .tdm-head .step-tag { font-size:11px; font-weight:700; color:#FFFFFF; background:var(--rose); padding:2px 10px; border-radius:10px; }
 #tdm .tdm-head a.back { margin-left:auto; padding:4px 12px; font-size:12px; }
 #tdm .banner ol.steps { margin:6px 0 0 20px; padding:0; }
 #tdm .banner ol.steps li { margin:2px 0; }
-#tdm .banner .note { margin-top:6px; font-size:12px; color:#5d6163; }
+#tdm .banner .note { margin-top:6px; font-size:12px; color:var(--sous); }
 @media print { #tdm .noprint, #tdm .tdm-head .step-tag, #tdm .tdm-head a.back { display:none; } }
-#tdm .card { border:1px solid var(--bord); border-radius:6px; background:#fff;
+#tdm .card { border:1px solid var(--bord); border-radius:6px; background:var(--carte);
              box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:16px; }
-#tdm .card > h3 { margin:0; padding:10px 14px; font-size:14px; color:#fff; background:var(--bleu);
+#tdm .card > h3 { margin:0; padding:10px 14px; font-size:14px; color:var(--sur-bleu); background:var(--bleu);
                   border-radius:5px 5px 0 0; display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
-#tdm .card > h3 .tag { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; background:#fff; color:var(--bleu); }
-#tdm .card > h3 .tag.ok { background:#eafaf0; color:var(--vert); }
-#tdm .card > h3 .tag.warn { background:#fff8e1; color:var(--orange); }
+#tdm .card > h3 .tag { font-size:11px; font-weight:600; padding:2px 8px; border-radius:10px; background:var(--carte); color:var(--lien); }
+#tdm .card > h3 .tag.ok { background:var(--ok-fond); color:var(--vert); }
+#tdm .card > h3 .tag.warn { background:var(--warn-fond); color:var(--orange); }
 #tdm .card > div { padding:14px; }
 #tdm .banner { background:var(--bleu-clair); border-left:4px solid var(--bleu); border-radius:0 6px 6px 0;
                padding:10px 14px; margin-bottom:16px; }
 #tdm .banner b { color:var(--bleu-fonce); }
 #tdm .msg { border-radius:6px; padding:10px 14px; margin-bottom:12px; }
 #tdm .msg ul { margin:4px 0 0 18px; padding:0; }
-#tdm .msg.ok   { background:#eafaf0; border:1px solid #9bd3ad; color:var(--vert); }
-#tdm .msg.err  { background:#fdecea; border:1px solid #e6a19b; color:var(--rouge); }
-#tdm .msg.warn { background:#fff8e1; border:1px solid #e0c46c; color:var(--orange); }
+#tdm .msg.ok   { background:var(--ok-fond); border:1px solid var(--ok-bord); color:var(--vert); }
+#tdm .msg.err  { background:var(--err-fond); border:1px solid var(--err-bord); color:var(--rouge); }
+#tdm .msg.warn { background:var(--warn-fond); border:1px solid var(--warn-bord); color:var(--orange); }
 #tdm table.list { border-collapse:collapse; width:100%; }
-#tdm table.list th { text-align:left; font-size:12px; color:#7d8183; font-weight:600; padding:4px 8px;
+#tdm table.list th { text-align:left; font-size:12px; color:var(--sous); font-weight:600; padding:4px 8px;
                      border-bottom:2px solid var(--bord); white-space:nowrap; }
-#tdm table.list td { padding:4px 8px; border-bottom:1px solid #eceeef; vertical-align:middle; }
-#tdm table.list tr.issue td { background:#fdecea; }
+#tdm table.list td { padding:4px 8px; border-bottom:1px solid var(--bleu-clair); vertical-align:middle; }
+#tdm table.list tr.issue td { background:var(--err-fond); }
 #tdm table.list tr.tie td.rank { color:var(--orange); font-weight:bold; }
 #tdm table.list .num { text-align:right; }
 #tdm table.list .team { font-weight:600; color:var(--bleu-fonce); }
@@ -208,20 +218,20 @@ function tdm_styles()
 #tdm input.score { width:64px; text-align:right; }
 #tdm input.small { width:46px; text-align:right; }
 #tdm input:invalid { border-color:var(--rouge); }
-#tdm button.primary { background:var(--bleu); border:1px solid var(--bleu); color:#fff; font-weight:600;
+#tdm button.primary { background:var(--bleu); border:1px solid var(--bleu); color:var(--sur-bleu); font-weight:600;
                       padding:8px 18px; font-size:13px; border-radius:6px; cursor:pointer; }
-#tdm button.primary:hover { background:var(--bleu-fonce); }
+#tdm button.primary:hover { background:var(--bleu-survol); }
 #tdm button.primary:disabled { opacity:.5; cursor:default; }
-#tdm a.secondary { display:inline-block; border:1px solid var(--bleu); color:var(--bleu); font-weight:600;
+#tdm a.secondary { display:inline-block; border:1px solid var(--bleu); color:var(--lien); font-weight:600;
                    padding:7px 14px; border-radius:6px; text-decoration:none; }
 #tdm .savebar { display:flex; align-items:center; gap:12px; margin-top:12px; flex-wrap:wrap; }
-#tdm .help { color:#7d8183; font-size:12px; margin:0 0 10px; }
+#tdm .help { color:var(--sous); font-size:12px; margin:0 0 10px; }
 #tdm .dirty { color:var(--orange); display:none; }
 #tdm .shortcuts { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin:0 0 12px; }
-#tdm .shortcuts a { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--bleu); color:var(--bleu); background:#fff;
+#tdm .shortcuts a { display:inline-flex; align-items:center; gap:5px; border:1px solid var(--bleu); color:var(--lien); background:var(--carte);
                     font-weight:600; font-size:12px; padding:4px 12px; border-radius:6px; text-decoration:none; }
 #tdm .shortcuts a:hover { background:var(--bleu-clair); }
 #tdm .shortcuts .lbl { font-weight:600; color:var(--bleu-fonce); min-width:150px; }
-#tdm .pool h4 a { font-weight:600; font-size:11px; color:var(--bleu); margin-left:6px; }
+#tdm .pool h4 a { font-weight:600; font-size:11px; color:var(--lien); margin-left:6px; }
 </style>';
 }

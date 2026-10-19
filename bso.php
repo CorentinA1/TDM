@@ -103,30 +103,30 @@ echo tdm_styles();
 <style>
 #tdm .slots { display:flex; flex-direction:column; gap:6px; margin-bottom:10px; }
 #tdm .slots label { display:flex; gap:8px; align-items:center; }
-#tdm .slots .n { width:70px; color:#7d8183; font-size:12px; }
+#tdm .slots .n { width:70px; color:var(--sous); font-size:12px; }
 #tdm select { padding:4px 6px; border:1px solid var(--bord); border-radius:4px; font-size:13px; min-width:240px; }
 #tdm .rounds { display:flex; gap:14px; flex-wrap:wrap; }
 #tdm .round { flex:1 1 240px; border:1px solid var(--bord); border-radius:6px; }
 #tdm .round h4 { margin:0; padding:6px 10px; background:var(--bleu-clair); color:var(--bleu-fonce); font-size:13px; }
 #tdm .round h4 small { font-weight:normal; color:var(--gris); }
 #tdm .st { font-size:11px; font-weight:600; padding:1px 7px; border-radius:9px; white-space:nowrap; }
-#tdm .st.q { background:#eafaf0; color:var(--vert); }
-#tdm .st.e { background:#f0f0f0; color:#7d8183; }
-#tdm .st.p { background:#fff8e1; color:var(--orange); }
-#tdm .places td.place { font-weight:bold; color:var(--bleu); }
+#tdm .st.q { background:var(--ok-fond); color:var(--vert); }
+#tdm .st.e { background:var(--fond); color:var(--sous); }
+#tdm .st.p { background:var(--warn-fond); color:var(--orange); }
+#tdm .places td.place { font-weight:bold; color:var(--lien); }
 #tdm .links { display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:12px; }
 #tdm .links form { margin:0; }
 #tdm details.phone { margin:0 0 12px; }
-#tdm details.phone summary { cursor:pointer; color:var(--bleu); font-weight:600; }
+#tdm details.phone summary { cursor:pointer; color:var(--lien); font-weight:600; }
 #tdm .qr { display:flex; gap:16px; align-items:flex-start; margin-top:8px; }
-#tdm .qr .qrbox { flex:0 0 auto; background:#fff; padding:10px; border:1px solid var(--bord); border-radius:6px; line-height:0; }
+#tdm .qr .qrbox { flex:0 0 auto; background:#FFFFFF; padding:10px; border:1px solid var(--bord); border-radius:6px; line-height:0; }
 #tdm .qr .qrbox svg { display:block; }
-#tdm .qr small { color:#7d8183; word-break:break-all; }
-#tdm .qr small a { color:var(--bleu); }
-#tdm button.danger { background:#fff; border:1px solid var(--rouge); color:var(--rouge); font-weight:600;
+#tdm .qr small { color:var(--sous); word-break:break-all; }
+#tdm .qr small a { color:var(--lien); }
+#tdm button.danger { background:var(--carte); border:1px solid var(--rouge); color:var(--rouge); font-weight:600;
                      padding:7px 14px; border-radius:6px; cursor:pointer; }
 #tdm form.nobso { display:flex; gap:10px; align-items:center; flex-wrap:wrap; background:var(--bleu-clair); border-radius:6px; padding:8px 12px; margin:0 0 12px; }
-#tdm form.nobso button { padding:4px 12px; font-size:12px; border-radius:6px; cursor:pointer; background:#fff; border:1px solid var(--bleu); color:var(--bleu); font-weight:600; }
+#tdm form.nobso button { padding:4px 12px; font-size:12px; border-radius:6px; cursor:pointer; background:var(--carte); border:1px solid var(--bleu); color:var(--lien); font-weight:600; }
 </style>
 <div id="tdm">
     <?= tdm_header('bso', 'Départage les 1ers de poule (poule unique : les deux premiers) par le Big Shoot Off.', [

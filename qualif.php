@@ -176,25 +176,25 @@ echo tdm_styles();
 ?>
 <style>
 #tdm .deps { display:flex; gap:10px; flex-wrap:wrap; margin:0 0 14px; }
-#tdm .dep { border:1px solid var(--bord); border-radius:8px; background:#fff; display:flex; align-items:center; gap:10px; padding:6px 10px; }
+#tdm .dep { border:1px solid var(--bord); border-radius:8px; background:var(--carte); display:flex; align-items:center; gap:10px; padding:6px 10px; }
 #tdm .dep.on { border:2px solid var(--bleu); box-shadow:0 0 0 3px var(--bleu-clair); }
 #tdm .dep a { text-decoration:none; color:inherit; display:flex; flex-direction:column; }
-#tdm .dep a span { font-size:12px; color:#7d8183; }
-#tdm .dep a em { font-style:normal; font-size:12px; font-weight:600; color:#7d8183; }
+#tdm .dep a span { font-size:12px; color:var(--sous); }
+#tdm .dep a em { font-style:normal; font-size:12px; font-weight:600; color:var(--sous); }
 #tdm .dep.open a em { color:var(--vert); }
 #tdm .dep button { padding:5px 10px; font-size:12px; border-radius:6px; cursor:pointer; }
-#tdm .dep button.close { background:#fff; border:1px solid var(--rouge); color:var(--rouge); font-weight:600; }
-#tdm button.validate { background:var(--vert); border:1px solid var(--vert); color:#fff; font-weight:600; font-size:12px;
+#tdm .dep button.close { background:var(--carte); border:1px solid var(--rouge); color:var(--rouge); font-weight:600; }
+#tdm button.validate { background:var(--vert); border:1px solid var(--vert); color:var(--champ); font-weight:600; font-size:12px;
                        padding:4px 12px; border-radius:6px; cursor:pointer; }
 #tdm button.validate:disabled { opacity:.45; cursor:default; }
 #tdm td.toss { white-space:nowrap; font-size:12px; }
 #tdm td.toss .todo { color:var(--rouge); font-weight:700; margin-left:6px; }
 #tdm .dep a.pending { color:var(--orange); font-size:12px; font-weight:600; }
 #tdm td.isk { white-space:nowrap; font-size:12px; }
-#tdm td.isk .prog { color:#7d8183; }
+#tdm td.isk .prog { color:var(--sous); }
 #tdm td.isk .prog.done { color:var(--vert); font-weight:600; }
-#tdm .badge-manual { display:inline-block; font-size:11px; font-weight:700; color:#fff; background:var(--orange); border-radius:4px; padding:0 6px; margin-left:4px; }
-#tdm button.mini { background:#fff; border:1px solid var(--bleu); color:var(--bleu); border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; cursor:pointer; }
+#tdm .badge-manual { display:inline-block; font-size:11px; font-weight:700; color:var(--champ); background:var(--orange); border-radius:4px; padding:0 6px; margin-left:4px; }
+#tdm button.mini { background:var(--carte); border:1px solid var(--bleu); color:var(--lien); border-radius:6px; padding:2px 8px; font-size:11px; font-weight:600; cursor:pointer; }
 #tdm button.mini.back { border-color:var(--orange); color:var(--orange); }
 </style>
 <div id="tdm">

@@ -56,11 +56,11 @@ if (!empty($on) && !empty($_SESSION['TourId'])) {
         }
         $tdmHtml .= '</div>';
         echo '<style>
-#tdm-bar{clear:both;background:#002B92;padding:2px 8px;display:flex;gap:2px;flex-wrap:wrap;align-items:center}
+#tdm-bar{clear:both;background:var(--header-dark);padding:2px 8px;display:flex;gap:2px;flex-wrap:wrap;align-items:center}
 #tdm-bar::before{content:"TDM";color:#F90A72;font-size:16px;font-weight:bold;padding:0 10px 0 4px;letter-spacing:3px;flex-shrink:0}
-#tdm-bar a{color:#fff;font-size:12px;padding:3px 10px;border-radius:3px;text-decoration:none;white-space:nowrap}
+#tdm-bar a{color:var(--row-main-text);font-size:12px;padding:3px 10px;border-radius:3px;text-decoration:none;white-space:nowrap}
 #tdm-bar a:hover{background:rgba(255,255,255,.15)}
-#tdm-bar a.tdm-cur{background:#F90A72;color:#fff;font-weight:bold}
+#tdm-bar a.tdm-cur{background:#F90A72;color:#FFFFFF;font-weight:bold}
 @media print{#tdm-bar{display:none}}
 </style><script>(function(){var h=' . json_encode($tdmHtml) . ';
 document.addEventListener("DOMContentLoaded",function(){

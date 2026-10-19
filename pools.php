@@ -79,9 +79,9 @@ echo tdm_styles();
                 font-size:13px; display:flex; justify-content:space-between; gap:8px; }
 #tdm .pool h4 small { font-weight:normal; color:var(--gris); }
 #tdm .pool table.list td, #tdm .pool table.list th { padding:3px 8px; }
-#tdm .pool tr.tie td { background:#fff8e1; }
+#tdm .pool tr.tie td { background:var(--warn-fond); }
 #tdm .pool tr.first td.team { color:var(--rose); }
-#tdm .pool form.manual { padding:8px 10px; border-top:1px dashed var(--bord); background:#fffdf5; }
+#tdm .pool form.manual { padding:8px 10px; border-top:1px dashed var(--bord); background:var(--warn-fond); }
 #tdm .pool form.manual .line { display:flex; align-items:center; gap:8px; margin:3px 0; }
 #tdm .pool form.manual input { width:40px; text-align:center; }
 #tdm .actions { display:flex; gap:10px; flex-wrap:wrap; margin-bottom:12px; align-items:center; }

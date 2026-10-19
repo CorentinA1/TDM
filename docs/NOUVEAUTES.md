@@ -1,5 +1,10 @@
 # Nouveautés de chaque version
 
+## 1.3.4
+
+- **Couleurs** : les pages du module et la barre TDM suivent la palette et le mode sombre du module THEME d'IANSEO.
+  Seul le rose TDM (logo de la barre, onglet actif, étapes) reste fixe.
+
 ## 1.3.3
 
 - **Mise à jour du module** : seules les nouveautés de la version disponible s'affichent, avec un lien

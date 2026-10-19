@@ -177,18 +177,18 @@ echo tdm_styles();
 ?>
 <style>
 #tdm .auto { display:flex; gap:14px; align-items:flex-end; flex-wrap:wrap; }
-#tdm .auto label { display:flex; flex-direction:column; gap:3px; font-size:12px; color:#7d8183; }
+#tdm .auto label { display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--sous); }
 #tdm .auto select { padding:4px; border:1px solid var(--bord); border-radius:4px; }
 #tdm .catauto { background:var(--bleu-clair); border-radius:6px; padding:8px 12px; margin-bottom:12px; }
 #tdm .catauto b { align-self:center; color:var(--bleu-fonce); }
 #tdm input.tgt { width:58px; text-align:center; text-transform:uppercase; font-weight:600; }
 #tdm .plan { display:grid; grid-template-columns:repeat(auto-fill, minmax(200px, 1fr)); gap:8px; }
 #tdm .plan .t { border:1px solid var(--bord); border-radius:6px; overflow:hidden; font-size:12px; }
-#tdm .plan .t b { display:block; background:var(--bleu); color:#fff; padding:2px 8px; }
-#tdm .plan .t div { padding:2px 8px; border-top:1px solid #eceeef; }
-#tdm .plan .t div i { color:#7d8183; font-style:normal; margin-right:4px; }
+#tdm .plan .t b { display:block; background:var(--bleu); color:var(--sur-bleu); padding:2px 8px; }
+#tdm .plan .t div { padding:2px 8px; border-top:1px solid var(--bleu-clair); }
+#tdm .plan .t div i { color:var(--sous); font-style:normal; margin-right:4px; }
 #tdm .plan .t.bad { border-color:var(--rouge); }
-#tdm .plan .cat { color:#7d8183; font-size:10px; float:right; }
+#tdm .plan .cat { color:var(--sous); font-size:10px; float:right; }
 </style>
 <div id="tdm">
     <?= tdm_header('cibles', 'Place deux équipes par cible pour la qualification, positions A et B (« 3A », « 3B »).', [

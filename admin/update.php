@@ -43,22 +43,35 @@ $PAGE_TITLE = 'TDM - Mise à jour du module';
 include $CFG->DOCUMENT_PATH . 'Common/Templates/head.php';
 ?>
 <style>
-#tdm-upd { max-width:760px; color:#4c4e50; font-size:13px; }
-#tdm-upd h2 { color:#01367c; font-size:18px; margin:6px 0 14px; }
-#tdm-upd .card { border:1px solid #d2d4d6; border-radius:6px; background:#fff; padding:14px 16px; margin-bottom:14px; }
-#tdm-upd .card h3 { margin:0 0 10px; font-size:14px; color:#01367c; }
+#tdm-upd {
+    /* Couleurs : variables IANSEO (Common/Styles/colors.css), redéfinies par le module THEME pour chaque palette
+       et pour le mode sombre. États : --text-success / --text-danger / --text-warning mêlées à --black (texte) ou à
+       --row-background (fonds), lisibles dans les deux modes. Seul le rose TDM (identité du trophée) reste fixe. */
+    --bleu:var(--header-dark); --sur-bleu:var(--row-main-text); --bleu-fonce:var(--main-text); --bleu-clair:var(--table-background);
+    --bleu-survol:color-mix(in srgb, var(--header-dark) 82%, var(--black)); --lien:var(--thm-link, var(--header-dark));
+    --rose:#f90a72;
+    --gris:var(--text-dark); --sous:var(--text-muted); --bord:var(--input-border); --fond:var(--header-light);
+    --carte:var(--row-background); --champ:var(--text-white); --champ-texte:var(--black);
+    --vert:color-mix(in srgb, var(--text-success) 60%, var(--black)); --ok-fond:color-mix(in srgb, var(--text-success) 14%, var(--row-background)); --ok-bord:color-mix(in srgb, var(--text-success) 45%, var(--row-background)); --ok-fort:color-mix(in srgb, var(--text-success) 28%, var(--row-background));
+    --rouge:color-mix(in srgb, var(--text-danger) 70%, var(--black)); --err-fond:color-mix(in srgb, var(--text-danger) 14%, var(--row-background)); --err-bord:color-mix(in srgb, var(--text-danger) 45%, var(--row-background));
+    --orange:color-mix(in srgb, var(--text-warning) 50%, var(--black)); --warn-fond:color-mix(in srgb, var(--text-warning) 16%, var(--row-background)); --warn-bord:color-mix(in srgb, var(--text-warning) 55%, var(--row-background));
+}
+#tdm-upd { max-width:760px; color:var(--gris); font-size:13px; }
+#tdm-upd h2 { color:var(--bleu-fonce); font-size:18px; margin:6px 0 14px; }
+#tdm-upd .card { border:1px solid var(--bord); border-radius:6px; background:var(--carte); padding:14px 16px; margin-bottom:14px; }
+#tdm-upd .card h3 { margin:0 0 10px; font-size:14px; color:var(--bleu-fonce); }
 #tdm-upd .msg { border-radius:6px; padding:10px 14px; margin-bottom:12px; }
-#tdm-upd .ok   { background:#eafaf0; border:1px solid #9bd3ad; color:#1e5e33; }
-#tdm-upd .err  { background:#fdecea; border:1px solid #e6a19b; color:#b3261e; }
-#tdm-upd .warn { background:#fff8e1; border:1px solid #e0c46c; color:#8a5a00; }
+#tdm-upd .ok   { background:var(--ok-fond); border:1px solid var(--ok-bord); color:var(--vert); }
+#tdm-upd .err  { background:var(--err-fond); border:1px solid var(--err-bord); color:var(--rouge); }
+#tdm-upd .warn { background:var(--warn-fond); border:1px solid var(--warn-bord); color:var(--orange); }
 #tdm-upd .badge { display:inline-block; border-radius:10px; padding:1px 9px; font-size:11px; font-weight:600; margin-left:6px; }
-#tdm-upd .badge.new { background:#fff1d6; color:#8a5a00; }
-#tdm-upd .badge.same { background:#eafaf0; color:#1e5e33; }
-#tdm-upd .notes { background:#f7f7f7; border-left:3px solid #0254a8; padding:8px 12px; margin:10px 0 0; white-space:pre-line; }
+#tdm-upd .badge.new { background:var(--warn-fond); color:var(--orange); }
+#tdm-upd .badge.same { background:var(--ok-fond); color:var(--vert); }
+#tdm-upd .notes { background:var(--fond); border-left:3px solid var(--bleu); padding:8px 12px; margin:10px 0 0; white-space:pre-line; }
 #tdm-upd button { border-radius:6px; cursor:pointer; padding:8px 18px; font-size:13px; font-weight:600; }
-#tdm-upd button.primary { background:#0254a8; border:1px solid #0254a8; color:#fff; }
-#tdm-upd button.ghost { background:#fff; border:1px solid #0254a8; color:#0254a8; }
-#tdm-upd .sub { color:#7d8183; font-size:12px; }
+#tdm-upd button.primary { background:var(--bleu); border:1px solid var(--bleu); color:var(--sur-bleu); }
+#tdm-upd button.ghost { background:var(--carte); border:1px solid var(--bleu); color:var(--lien); }
+#tdm-upd .sub { color:var(--sous); font-size:12px; }
 #tdm-upd details { margin-top:10px; }
 </style>
 
@@ -115,11 +128,11 @@ include $CFG->DOCUMENT_PATH . 'Common/Templates/head.php';
     </div>
     <?php endif; ?>
 
-    <details class="card" style="border-color:#e8b4ae;background:#fdf6f5">
-        <summary style="color:#c0392b;font-weight:600;cursor:pointer">Désinstaller le module</summary>
+    <details class="card" style="border-color:var(--err-bord);background:var(--err-fond)">
+        <summary style="color:var(--rouge);font-weight:600;cursor:pointer">Désinstaller le module</summary>
         <p style="margin:10px 0">Supprime le dossier du module. Ses données (tables du Big Shoot Off et réglages TDM)
             sont conservées, sauf si vous demandez leur suppression sur l'écran de confirmation.</p>
-        <a href="uninstall.php" style="display:inline-block;background:#c0392b;color:#fff;padding:8px 18px;border-radius:6px;font-weight:600;text-decoration:none">Désinstaller…</a>
+        <a href="uninstall.php" style="display:inline-block;background:var(--rouge);color:var(--champ);padding:8px 18px;border-radius:6px;font-weight:600;text-decoration:none">Désinstaller…</a>
     </details>
 </div>
 <?php include $CFG->DOCUMENT_PATH . 'Common/Templates/tail.php'; ?>
