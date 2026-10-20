@@ -1,5 +1,12 @@
 # Nouveautés de chaque version
 
+## 1.3.5
+
+- **Mise à jour du module sous Windows.** La mise à jour depuis IANSEO s'arrêtait sur « Écriture impossible :
+  admin/update.php » : Windows refuse de remplacer la page en cours d'affichage. Le module écrit maintenant
+  directement dans ce fichier. Pour passer à cette version depuis une version précédente sous Windows, une seule
+  fois : décompresser le ZIP de la Release dans `Modules/Custom` en écrasant les fichiers ; les données, en base, sont gardées.
+
 ## 1.3.4
 
 - **Couleurs** : les pages du module et la barre TDM suivent la palette et le mode sombre du module THEME d'IANSEO.
