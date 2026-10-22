@@ -348,6 +348,7 @@ echo tdm_styles();
     <?php elseif ($session): ?>
         <div class="msg warn">Aucune équipe : composez d'abord les équipes (Configuration › Composition des équipes).</div>
     <?php endif; ?>
+    <?= tdm_footer() ?>
 </div>
 <?php
 include($CFG->DOCUMENT_PATH . 'Common/Templates/tail.php');

@@ -105,6 +105,7 @@ echo tdm_styles();
     </div>
     <div id="clubs"><p class="help">Chargement…</p></div>
     <div id="toast"></div>
+    <?= tdm_footer() ?>
 </div>
 <script>
 (function () {

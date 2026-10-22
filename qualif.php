@@ -439,6 +439,7 @@ echo tdm_styles();
         </div>
     </div>
     <?php endforeach; ?>
+    <?= tdm_footer() ?>
 </div>
 <script>
 // Validation qualif → poules avec le classement du règlement (pile ou face compris) :

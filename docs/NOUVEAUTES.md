@@ -1,5 +1,13 @@
 # Nouveautés de chaque version
 
+## 1.3.6
+
+- **Guide utilisateur illustré (PDF)** dans `docs/GUIDE-UTILISATEUR.pdf` : une manche pas à pas, de la configuration aux
+  résultats et au fichier FFTA, avec des captures sur une manche fictive, et questions fréquentes. Le lien **Mode
+  d'emploi**, en haut à droite de chaque page du module, l'ouvre directement.
+- **Avertissement plus discret** : une ligne en pied de chaque page (module indépendant, sans garantie ; sauvegarder la
+  compétition, et la base pour le Big Shoot Off) remplace les deux bandeaux du haut de la page Configuration.
+
 ## 1.3.5
 
 - **Mise à jour du module sous Windows.** La mise à jour depuis IANSEO s'arrêtait sur « Écriture impossible :

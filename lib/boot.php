@@ -145,6 +145,8 @@ function tdm_header($current, $intro, array $steps = [], $note = '', $back = nul
     $h = '<div class="tdm-head"><h2>Trophée des Mixtes <span class="page">› ' . tdm_h($title) . '</span></h2>'
         . '<span class="step-tag">Étape ' . $num . ' sur ' . $total . '</span>';
     if ($back) $h .= '<a class="secondary back" href="' . tdm_h($back[0]) . '">← ' . tdm_h($back[1]) . '</a>';
+    global $TDM_ROOT;
+    $h .= '<a class="help noprint" href="' . tdm_h($TDM_ROOT . 'docs/GUIDE-UTILISATEUR.pdf') . '" target="_blank" rel="noopener">Mode d\'emploi</a>';
     $h .= '</div>';
     // Avant l'étape 1 enregistrée : seul lien utile, la Configuration.
     if ($current !== 'preconfig' && (int) getModuleParameter('TDM', 'Configured', 0) !== 1) {
@@ -160,6 +162,16 @@ function tdm_header($current, $intro, array $steps = [], $note = '', $back = nul
     }
     if ($note !== '') $h .= '<div class="note">' . $note . '</div>';
     return $h . '</div>';
+}
+
+/** Pied de page commun : l'avertissement, sur une ligne discrète (même présentation que les autres modules). */
+function tdm_footer()
+{
+    global $CFG;
+    return '<p class="tdm-foot noprint">Module indépendant d\'IANSEO, sans garantie ni SAV. <b>Sauvegardez la compétition</b> avant de commencer et après chaque étape ('
+        . '<a href="' . tdm_h($CFG->ROOT_DIR . 'Tournament/TournamentExport.php') . '">Compétition › Exports › Export de la compétition</a> ; '
+        . 'le Big Shoot Off n\'y est pas, sauvegardez aussi la base). '
+        . '<a href="https://github.com/CorentinA1/TDM/blob/main/docs/AVERTISSEMENT.md" target="_blank" rel="noopener">À lire avant d\'utiliser le module</a></p>';
 }
 
 /** Feuille de style commune des pages du module (conteneur #tdm). */
@@ -184,6 +196,9 @@ function tdm_styles()
 #tdm .tdm-head h2 .page { font-weight:600; }
 #tdm .tdm-head .step-tag { font-size:11px; font-weight:700; color:#FFFFFF; background:var(--rose); padding:2px 10px; border-radius:10px; }
 #tdm .tdm-head a.back { margin-left:auto; padding:4px 12px; font-size:12px; }
+#tdm .tdm-head a.help { margin-left:auto; font-size:13px; color:var(--lien); text-decoration:underline; }
+#tdm .tdm-head a.back ~ a.help { margin-left:6px; }
+#tdm .tdm-foot { margin-top:22px; padding-top:8px; border-top:1px solid var(--bord); color:var(--sous); font-size:12px; }
 #tdm .banner ol.steps { margin:6px 0 0 20px; padding:0; }
 #tdm .banner ol.steps li { margin:2px 0; }
 #tdm .banner .note { margin-top:6px; font-size:12px; color:var(--sous); }

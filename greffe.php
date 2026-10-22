@@ -94,6 +94,7 @@ $prn = $CFG->ROOT_DIR . 'Partecipants/';
             </div>
         </div>
     </div>
+    <?= tdm_footer() ?>
 </div>
 <?php
 include($CFG->DOCUMENT_PATH . 'Common/Templates/tail.php');

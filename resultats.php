@@ -107,6 +107,7 @@ echo tdm_styles();
         </div>
     </div>
     <?php endforeach; ?>
+    <?= tdm_footer() ?>
 </div>
 <?php
 include($CFG->DOCUMENT_PATH . 'Common/Templates/tail.php');

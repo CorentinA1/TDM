@@ -1,5 +1,8 @@
 # Utilisation pas à pas
 
+> Version illustrée, à lire ou à imprimer : le [guide utilisateur (PDF)](GUIDE-UTILISATEUR.pdf), ouvert aussi par le
+> lien **Mode d'emploi** du module.
+
 Une fois la configuration faite, une **barre TDM** s'affiche sous le menu IANSEO sur toutes les pages
 (y compris celles d'IANSEO) : elle suit le déroulé d'une manche et surligne la page en cours.
 Chaque page du module rappelle en tête son rôle et ses étapes.
