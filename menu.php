@@ -43,7 +43,32 @@ if (!empty($on) && !empty($_SESSION['TourId'])) {
         if (subFeatureAcl($acl, AclRoot, '') >= AclReadWrite
             && (empty($_SESSION['AUTH_User']) || !empty($_SESSION['AUTH_ROOT']))) {
             $ret['MODS']['TDM'][] = MENU_DIVIDER;
-            $ret['MODS']['TDM'][] = 'Mise à jour du module|' . $tdmRoot . 'admin/update.php';
+            // Pastille « mise à jour disponible » : lit seulement l'état gardé par la dernière
+            // vérification (lib/update.php, tdm_upd_notify_*), jamais GitHub. Délai écoulé :
+            // une image invisible lance la vérification en arrière-plan (admin/update-check.php).
+            $tdMaj = '';
+            $tdReal = realpath(__DIR__);
+            $tdState = @json_decode((string) @file_get_contents(sys_get_temp_dir() . '/ianseo-maj-' . md5($tdReal !== false ? $tdReal : __DIR__) . '.json'), true);
+            $tdLocal = @json_decode((string) @file_get_contents(__DIR__ . '/version.json'), true);
+            $tdHave = is_array($tdLocal) ? (string) ($tdLocal['version'] ?? '') : '';
+            $tdLatest = is_array($tdState) ? (string) ($tdState['latest'] ?? '') : '';
+            if ($tdHave !== '' && preg_match('/^\d+\.\d+\.\d+$/', $tdLatest) && version_compare($tdLatest, $tdHave, '>')) {
+                $tdTip = htmlspecialchars('Mise à jour disponible : ' . $tdHave . ' → ' . $tdLatest, ENT_QUOTES, 'UTF-8');
+                $tdMaj = '<span class="maj-dot" title="' . $tdTip . '" style="display:inline-block;min-width:15px;height:15px;line-height:15px;padding:0 3px;border-radius:8px;'
+                    . 'background:var(--text-danger,#d6283a);color:#fff;font-size:10px;font-weight:bold;text-align:center;margin-left:6px;vertical-align:middle">⬆</span>';
+                $tdDot = '<span class="maj-dot" title="' . $tdTip . '" style="display:inline-block;width:8px;height:8px;border-radius:50%;'
+                    . 'background:var(--text-danger,#d6283a);margin-left:5px;vertical-align:middle"></span>';
+                $ret['MODS']['TDM'][0] .= $tdDot;
+                // Titre « Modules » de la barre : un seul point, quel que soit le nombre de modules concernés.
+                if (isset($ret['MODS'][0]) && strpos($ret['MODS'][0], 'maj-dot') === false) {
+                    $ret['MODS'][0] .= '<span class="maj-dot" title="Mise à jour disponible pour un module" style="display:inline-block;width:8px;height:8px;border-radius:50%;'
+                        . 'background:var(--text-danger,#d6283a);margin-left:4px;vertical-align:super"></span>';
+                }
+            }
+            if (!is_array($tdState) || time() >= (int) ($tdState['next'] ?? 0)) {
+                $tdMaj .= '<img src="' . $CFG->ROOT_DIR . 'Modules/Custom/' . basename(__DIR__) . '/admin/update-check.php" alt="" width="1" height="1" style="position:absolute;opacity:0">';
+            }
+            $ret['MODS']['TDM'][] = 'Mise à jour du module' . $tdMaj . '|' . $tdmRoot . 'admin/update.php';
         }
     }
 

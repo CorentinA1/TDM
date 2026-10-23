@@ -187,6 +187,8 @@ function tdm_upd_check($dir)
 {
     $local = tdm_upd_local($dir);
     $remote = tdm_upd_remote(tdm_upd_config($dir));
+    // La page de mise à jour vient d'interroger GitHub : la pastille du menu suit tout de suite.
+    tdm_upd_notify_save($dir, isset($remote['_error']) ? null : $remote['version']);
     $lv = $local['version'] ?? null;
     if (isset($remote['_error'])) {
         return ['local' => $lv, 'remote' => null, 'notes' => '', 'date' => '', 'update' => false,
@@ -201,6 +203,83 @@ function tdm_upd_check($dir)
         'dev'    => is_dir($dir . '/.git'),
         'error'  => null,
     ];
+}
+
+// ── Pastille « mise à jour disponible » du menu ──────────────────────────────
+//
+// menu.php est inclus par IANSEO sur chaque page : il ne doit jamais interroger GitHub
+// (sans Internet, chaque page attendrait la fin du délai). Il lit seulement le fichier
+// gardé ici, dans le dossier temporaire du serveur (toujours accessible en écriture).
+// Ce fichier est rafraîchi en arrière-plan par admin/update-check.php, appelé au plus
+// une fois par jour par une image invisible du menu (administrateur seulement), et par
+// la page de mise à jour à chaque vérification.
+
+/** Délais avant la vérification suivante : réussie, échouée (hors ligne), en cours. */
+const TDM_NOTIFY_OK = 86400;
+const TDM_NOTIFY_FAIL = 3600;
+const TDM_NOTIFY_BUSY = 600;
+
+/** Fichier de l'état gardé, propre à ce dossier de module (même calcul que menu.php). */
+function tdm_upd_notify_file($dir)
+{
+    $real = realpath($dir);
+    return sys_get_temp_dir() . '/ianseo-maj-' . md5($real !== false ? $real : $dir) . '.json';
+}
+
+/** État gardé : ['latest' => version|null, 'checked' => horodatage, 'next' => horodatage], ou null. */
+function tdm_upd_notify_read($dir)
+{
+    $f = tdm_upd_notify_file($dir);
+    $d = is_file($f) ? json_decode((string) @file_get_contents($f), true) : null;
+    return is_array($d) ? $d : null;
+}
+
+/**
+ * Garde le résultat d'une vérification. Échec (hors ligne) : la dernière version connue
+ * est gardée et la vérification sera retentée plus tôt.
+ *
+ * @param string|null $latest Version du dépôt, ou null si GitHub n'a pas répondu.
+ */
+function tdm_upd_notify_save($dir, $latest, $busy = false)
+{
+    $old = tdm_upd_notify_read($dir);
+    $ok = $latest !== null && preg_match('/^\d+\.\d+\.\d+$/', (string) $latest);
+    $now = time();
+    $state = [
+        'latest' => $ok ? (string) $latest : ($old['latest'] ?? null),
+        'checked' => $busy ? ($old['checked'] ?? 0) : $now,
+        'next' => $now + ($busy ? TDM_NOTIFY_BUSY : ($ok ? TDM_NOTIFY_OK : TDM_NOTIFY_FAIL)),
+    ];
+    $f = tdm_upd_notify_file($dir);
+    $tmp = $f . '.' . bin2hex(random_bytes(4));
+    if (@file_put_contents($tmp, json_encode($state)) === false || !@rename($tmp, $f)) {
+        @unlink($tmp);
+        @file_put_contents($f, json_encode($state));   // Windows : renommage refusé si le fichier est ouvert
+    }
+    return $state;
+}
+
+/** Faut-il vérifier maintenant ? (fichier absent, ou délai écoulé) */
+function tdm_upd_notify_due($dir, $now = null)
+{
+    $s = tdm_upd_notify_read($dir);
+    return !$s || ($now ?? time()) >= (int) ($s['next'] ?? 0);
+}
+
+/**
+ * Vérification en arrière-plan, si le délai est écoulé. Marque d'abord « en cours » :
+ * plusieurs pages ouvertes en même temps ne lancent qu'une vérification.
+ *
+ * @return array|null Nouvel état, ou null si rien à faire.
+ */
+function tdm_upd_notify_refresh($dir)
+{
+    if (!tdm_upd_notify_due($dir)) return null;
+    tdm_upd_notify_save($dir, null, true);
+    $remote = tdm_upd_remote(tdm_upd_config($dir));
+    // La page de mise à jour vient d'interroger GitHub : la pastille du menu suit tout de suite.
+    tdm_upd_notify_save($dir, isset($remote['_error']) ? null : $remote['version']);
+    return tdm_upd_notify_save($dir, isset($remote['_error']) ? null : $remote['version']);
 }
 
 /**
