@@ -190,7 +190,7 @@ function tdm_styles()
     --vert:color-mix(in srgb, var(--text-success) 60%, var(--black)); --ok-fond:color-mix(in srgb, var(--text-success) 14%, var(--row-background)); --ok-bord:color-mix(in srgb, var(--text-success) 45%, var(--row-background)); --ok-fort:color-mix(in srgb, var(--text-success) 28%, var(--row-background));
     --rouge:color-mix(in srgb, var(--text-danger) 70%, var(--black)); --err-fond:color-mix(in srgb, var(--text-danger) 14%, var(--row-background)); --err-bord:color-mix(in srgb, var(--text-danger) 45%, var(--row-background));
     --orange:color-mix(in srgb, var(--text-warning) 50%, var(--black)); --warn-fond:color-mix(in srgb, var(--text-warning) 16%, var(--row-background)); --warn-bord:color-mix(in srgb, var(--text-warning) 55%, var(--row-background));
-       max-width:1100px; color:var(--gris); font-size:13px; }
+       max-width:1100px; margin:0 auto; color:var(--gris); font-size:13px; }
 #tdm .tdm-head { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:6px 0 14px; }
 #tdm .tdm-head h2 { margin:0; color:var(--lien); font-size:18px; }
 #tdm .tdm-head h2 .page { font-weight:600; }
@@ -203,6 +203,7 @@ function tdm_styles()
 #tdm .banner ol.steps li { margin:2px 0; }
 #tdm .banner .note { margin-top:6px; font-size:12px; color:var(--sous); }
 @media print { #tdm .noprint, #tdm .tdm-head .step-tag, #tdm .tdm-head a.back { display:none; } }
+@media (max-width:760px) { #tdm table { display:block; overflow-x:auto; } }
 #tdm .card { border:1px solid var(--bord); border-radius:6px; background:var(--carte);
              box-shadow:0 1px 3px rgba(0,0,0,.08); margin-bottom:16px; }
 #tdm .card > h3 { margin:0; padding:10px 14px; font-size:14px; color:var(--sur-bleu); background:var(--bleu);
